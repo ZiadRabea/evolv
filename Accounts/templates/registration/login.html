@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="{% static 'imgs/logo.png' %}" type="image/png">
+  <title>Login - Evolv</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #EF7722;
+      --accent: #0BA6DF;
+      --warm: #FAA533;
+      --background: #F8F8F8;
+      --card-bg: #ffffff;
+      --text: #1E1E1E;
+      --muted: #a1a1a1;
+      --border: #e5e5e5;
+      --radius: 16px;
+      --transition: 0.25s ease;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: var(--background);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 380px;
+      padding: 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 70% 30%, rgba(11,166,223,0.05), transparent 60%);
+      z-index: 0;
+    }
+
+    .login-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-card img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 0.8rem;
+      border-radius: 20px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+
+    .field {
+      text-align: left;
+      margin-bottom: 1rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+      transition: border var(--transition), box-shadow var(--transition);
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(11,166,223,0.15);
+      outline: none;
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--warm));
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(239,119,34,0.25);
+    }
+
+    .login-footer {
+      margin-top: 1.4rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .login-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .error-msg {
+      background: rgba(255, 77, 77, 0.08);
+      color: #d92d2d;
+      border: 1px solid rgba(255, 77, 77, 0.15);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+  {% block content %}
+  <div class="login-card">
+    <div class="login-content">
+      <h1>Login for Evolv</h1>
+
+      {% if form.errors %}
+        <p class="error-msg">Incorrect username or password. Please try again.</p>
+      {% endif %}
+
+      {% if next %}
+        {% if user.is_authenticated %}
+          <p>Your account doesn’t have access to this page. Please log in with an authorized account.</p>
+        {% endif %}
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="field">
+          <label for="id_username">Username</label>
+          {{ form.username }}
+        </div>
+        <div class="field">
+          <label for="id_password">Password</label>
+          {{ form.password }}
+        </div>
+
+        <button class="btn" type="submit">Login</button>
+
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}" />
+        {% else %}
+          <input type="hidden" name="next" value="/" />
+        {% endif %}
+      </form>
+
+      <div class="login-footer">
+        <p>Forgot password? <a href="{% url 'password_reset' %}">Reset</a></p>
+        <p>New here? <a href="{% url 'signup' %}">Create Account</a></p>
+      </div>
+    </div>
+  </div>
+  {% endblock %}
+
+  <script>
+    document.getElementById("id_username").placeholder = "Your username";
+    document.getElementById("id_password").placeholder = "Your password";
+  </script>
+</body>
+</html>
