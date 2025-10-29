@@ -15,3 +15,5 @@ urllib3
 beautifulsoup4
 django_markdown_deux
 daphne==4.2.1
+channels==4.3.1
+channels_redis==4.3.0
