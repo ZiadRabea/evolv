@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ.get("secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -160,7 +160,10 @@ CLOUDINARY_STORAGE = {
     'API_KEY': os.environ.get("cloudinary_api_key"),
     'API_SECRET': os.environ.get("cloudinary_secret_key")
 }
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://angry-mitzi-ziadrabea-7b615467.koyeb.app',
+    'evolv.opindustries.space'
+]
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_HOST_USER = os.environ.get("email_user")
