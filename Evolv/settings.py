@@ -162,7 +162,7 @@ CLOUDINARY_STORAGE = {
 }
 CSRF_TRUSTED_ORIGINS = [
     'https://angry-mitzi-ziadrabea-7b615467.koyeb.app',
-    'evolv.opindustries.space'
+    'https://evolv.opindustries.space/'
 ]
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
