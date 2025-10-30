@@ -86,7 +86,8 @@ def projects(request, username):
 def chat_room(request, username):
     other_profile = get_object_or_404(Profile, slug=username)
     user_profile = request.user.profile
-
+    user_profile.chats.add(other_profile)
+    other_profile.chats.add(user_profile)
     # Fetch all messages between these two
     messages = Message.objects.filter(
         sender__in=[user_profile, other_profile],
