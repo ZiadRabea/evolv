@@ -10,10 +10,10 @@ from django.core.paginator import Paginator
 
 def error(request):
     return render(request, "error.html")
-    
+
 def home(request):
     posts = Post.objects.all()
-    filters = Postfilter(request.GET, queryset=posts)
+    filters = PostFilter(request.GET, queryset=posts)
     posts=filters.qs
 
     paginator = Paginator(posts, 5)
