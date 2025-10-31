@@ -3,10 +3,22 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from.models import *
 from.forms import *
+from.filters import PostFilter
 from Accounts.models import Message
+from django.core.paginator import Paginator
 # Create your views here.
+
+def error(request):
+    return render(request, "error.html")
+    
 def home(request):
     posts = Post.objects.all()
+    filters = Postfilter(request.GET, queryset=posts)
+    posts=filters.qs
+
+    paginator = Paginator(posts, 5)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
     
     if request.method == "POST":
         form = PostForm(request.POST, request.FILES)
@@ -20,7 +32,7 @@ def home(request):
         form = PostForm()
 
     context = {
-        "posts":posts,
+        "posts":page_obj,
         "form": form
     }
 

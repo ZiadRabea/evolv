@@ -143,7 +143,7 @@
             </div>
           {%endif%}
           <div class="mt-4 px-2">
-            <a href="/settings" class="flex items-center gap-3 text-gray-500 hover:text-primary sidebar-icon">
+            <a href="#" class="flex items-center gap-3 text-gray-500 hover:text-primary sidebar-icon">
               <i class="fas fa-cog text-lg w-6 text-center"></i>
               <span class="hidden lg:inline text-sm font-medium">Settings</span>
             </a>
@@ -256,6 +256,47 @@
           </div>
         </article>
         {%endfor%}
+
+        {% if posts.has_other_pages %}
+          <div class="flex justify-center mt-8">
+            <nav class="inline-flex items-center space-x-2 bg-white p-2 rounded-xl2 shadow-sm border border-gray-100">
+              <!-- Previous -->
+              {% if posts.has_previous %}
+                <a href="?page={{ posts.previous_page_number }}" 
+                  class="px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-primary hover:text-white transition">
+                  <i class="fa-solid fa-angle-left"></i>
+                </a>
+              {% else %}
+                <span class="px-3 py-1.5 rounded-lg text-sm text-gray-300 bg-gray-50 cursor-not-allowed">
+                  <i class="fa-solid fa-angle-left"></i>
+                </span>
+              {% endif %}
+
+              <!-- Page numbers -->
+              {% for num in posts.paginator.page_range %}
+                {% if posts.number == num %}
+                  <span class="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm">{{ num }}</span>
+                {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+                  <a href="?page={{ num }}" 
+                    class="px-4 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-accent hover:text-white transition">{{ num }}</a>
+                {% endif %}
+              {% endfor %}
+
+              <!-- Next -->
+              {% if posts.has_next %}
+                <a href="?page={{ posts.next_page_number }}" 
+                  class="px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-primary hover:text-white transition">
+                  <i class="fa-solid fa-angle-right"></i>
+                </a>
+              {% else %}
+                <span class="px-3 py-1.5 rounded-lg text-sm text-gray-300 bg-gray-50 cursor-not-allowed">
+                  <i class="fa-solid fa-angle-right"></i>
+                </span>
+              {% endif %}
+            </nav>
+          </div>
+        {% endif %}
+
       </main>
 
       <!-- RIGHT SIDEBAR: PROFILE CARD + FOLLOWERS -->

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main',
     'markdown_deux',
+    'django_filters',
 ]
 
 ASGI_APPLICATION = "Evolv.asgi.application"

@@ -566,8 +566,7 @@
     const streakVisualEl = document.querySelector(".streak-visual");
 
     // ===== initial state =====
-    let habits = getData("habits", [
-    ]);
+    let habits = getData("habits", []);
 
     let lastReset = getData("lastReset", null);
     const today = new Date().toDateString();
@@ -582,8 +581,8 @@
     let streak = getData("streak", { count: 0, lastCheck: null });
 
     const matrixData = getData("matrix", {
-      q1: [{ title: "Finish report", note: "Due tomorrow" }],
-      q2: [{ title: "Read productivity book", note: "Weekend" }],
+      q1: [],
+      q2: [],
       q3: [],
       q4: []
     });
