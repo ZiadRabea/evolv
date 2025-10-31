@@ -218,7 +218,8 @@
         <!-- feed post -->
         {%for post in posts%}
         <article class="bg-white rounded-xl2 p-5 card-shadow hover-card space-y-3">
-          <a href="/in/{{post.owner.slug}}" class="flex items-center gap-3">
+          <div class="flex items-center gap-3">
+          <a href="/in/{{post.owner.slug}}">
             {%if post.owner.profile_pic%}
               <img src="{{post.owner.profile_pic.url}}" class="w-10 h-10 rounded-full">
             {%else%}
@@ -228,7 +229,15 @@
               <div class="font-medium text-sm">{{post.owner.user.first_name}}</div>
               <div class="text-xs text-gray-500">{{post.date|timesince}} • ago | {{post.audience}}</div>
             </div>
-          </a>
+            </a>
+            {% if post.owner == user.profile %}
+              <a href="/post/{{ post.id }}/delete"
+                class="flex items-center justify-center w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 transition"
+                title="Delete this post">
+                <i class="fa-solid fa-trash text-red-500 text-sm"></i>
+              </a>
+            {% endif %}
+          </div>
           <p class="text-base text-gray-800 leading-relaxed">
             {{post.text|markdown}}
           </p>
