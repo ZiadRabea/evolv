@@ -218,7 +218,7 @@
         <!-- feed post -->
         {%for post in posts%}
         <article class="bg-white rounded-xl2 p-5 card-shadow hover-card space-y-3">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 justify-between">
           <a href="/in/{{post.owner.slug}}">
             {%if post.owner.profile_pic%}
               <img src="{{post.owner.profile_pic.url}}" class="w-10 h-10 rounded-full">
