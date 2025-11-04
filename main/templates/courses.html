@@ -1,0 +1,400 @@
+{%load static%}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Evolv — Grow (Courses)</title>
+
+  <!-- Fonts & UI -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#EF7722',
+            accent: '#0BA6DF',
+            warm: '#FAA533',
+            bgsoft: '#F8F8F8',
+            neutralText: '#1E1E1E'
+          },
+          borderRadius: {
+            xl2: '18px'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .card-shadow { box-shadow: 0 10px 30px rgba(16,16,16,0.04); }
+    .primary-card { border: 1px solid rgba(239,119,34,0.08); box-shadow: 0 18px 50px rgba(239,119,34,0.06); }
+    .hover-card { transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s; }
+    .hover-card:hover { transform: translateY(-6px); box-shadow: 0 14px 40px rgba(18,18,18,0.06); }
+    .glass { backdrop-filter: blur(8px); background: rgba(255,255,255,0.84); }
+    .sidebar-icon { transition: all 0.16s ease; }
+    .sidebar-icon:hover { color: var(--tw-colors-primary); transform: scale(1.08); }
+    .badge-primary { background: linear-gradient(90deg,#EF7722,#FAA533); color: white; font-weight:600; padding:6px 10px; border-radius:999px; font-size:12px; }
+    .card-link { color: inherit; text-decoration: none; display: block; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .flash-message {backdrop-filter: blur(8px);background: rgba(30,30,30,0.85);}
+  </style>
+  
+</head>
+<body class="bg-bgsoft text-neutralText">
+
+  <!-- NAVBAR -->
+  <nav class="glass fixed w-full top-0 left-0 z-40 border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-gradient-to-br from-primary to-warm rounded-lg flex items-center justify-center text-white font-semibold text-base">
+              E
+            </div>
+            <span class="font-semibold text-gray-800 text-lg">Evolv</span>
+          </div>
+
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/" class="text-sm font-medium text-gray-600 hover:text-primary transition">Home</a>
+            <a href="/planner" class="text-sm font-medium text-gray-600 hover:text-primary transition">Planner</a>
+            <a href="/courses" class="text-sm font-medium text-gray-600 border-b-2 border-primary">Grow</a>
+            {%if user.is_authenticated%}
+              <a href="/in/{{user.profile.slug}}" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+            {%else%}
+              <a href="/accounts/login" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+            {%endif%}
+          </div>
+
+          <form method="GET" class="flex items-center gap-3">
+            {%csrf_token%}
+            <input id="searchInput" type="text" name="text" placeholder="Search..." class="bg-white border border-gray-200 text-sm px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent w-32 sm:w-44 lg:w-60" />
+            <button type="title" class="px-4 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition">Search</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+    {% if messages %}
+      <div id="flash-messages" class="fixed top-20 right-4 z-50 space-y-3">
+        {% for message in messages %}
+          <div class="flash-message px-4 py-3 rounded-lg shadow-md text-white flex items-center justify-between min-w-[260px]
+            {% if message.tags == 'success' %} bg-green-500 {% elif message.tags == 'error' %} bg-red-500 
+            {% elif message.tags == 'warning' %} bg-yellow-500 {% else %} bg-accent {% endif %} 
+            opacity-0 translate-x-4 transition-all duration-500 ease-out">
+            <span class="text-sm font-medium">{{ message }}</span>
+            <button type="button" class="ml-3 text-white/80 hover:text-white text-lg leading-none focus:outline-none">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+  <!-- PAGE LAYOUT -->
+  <div class="flex max-w-7xl mx-auto px-4 lg:px-8 gap-6 mt-[70px]">
+
+    <!-- SIDEBAR -->
+    <aside class="hidden md:flex w-20 sm:w-24 lg:w-56 h-[calc(100vh-70px)] px-3 py-6 glass border-r border-gray-200 sticky top-16 flex-col">
+        <div class="flex flex-col gap-4">
+          <a href="/" class="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-primary sidebar-icon">
+            <i class="fas fa-home text-lg w-6 text-center"></i>
+            <span class="hidden lg:inline text-sm font-medium">Home</span>
+          </a>
+
+          <a href="/planner" class="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-primary sidebar-icon">
+            <i class="fas fa-calendar-check text-lg w-6 text-center"></i>
+            <span class="hidden lg:inline text-sm font-medium">Planner</span>
+          </a>
+
+          <a href="/courses" class="flex items-center gap-3 px-2 py-2 text-primary sidebar-icon">
+            <i class="fas fa-briefcase text-lg w-6 text-center"></i>
+            <span class="hidden lg:inline text-sm font-medium">Grow</span>
+          </a>
+
+          <a href="/notifications" class="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-primary font-medium sidebar-icon">
+              <i class="fas fa-bell text-lg w-6 text-center"></i>
+              <span class="hidden lg:inline text-sm">Notifications</span>
+          </a>
+
+          <a href="/chats" class="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-primary sidebar-icon">
+            <i class="fas fa-comments text-lg w-6 text-center"></i>
+            <span class="hidden lg:inline text-sm font-medium">Chats</span>
+          </a>
+        </div>
+
+        <div class="mt-auto">
+          <!-- Profile summary (compact) -->
+          {%if user.is_authenticated%}
+            <a href="/in/{{user.profile.slug}}">
+              <div class="hidden lg:flex items-center gap-3 p-3 rounded-xl2 bg-white card-shadow">
+                {%if user.profile.profile_pic%}
+                  <img src="{{user.profile.profile_pic.url}}" class="w-10 h-10 rounded-full object-cover">
+                {%else%}
+                  <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-10 h-10 rounded-full object-cover">
+                {%endif%}
+                <div>
+                  <div class="text-sm font-medium">{{user.first_name}}</div>
+                  <div class="text-xs text-gray-500">{{user.profile.job_title}}</div>
+                </div>
+              </div>
+            </a>
+          {%else%}
+            <a href="/accounts/login">
+              <div class="hidden lg:flex items-center gap-3 p-3 rounded-xl2 bg-white card-shadow">
+                <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-10 h-10 rounded-full object-cover">
+                <div>
+                  <div class="text-sm font-medium">User Name</div>
+                  <div class="text-xs text-gray-500">Job Title</div>
+                </div>
+              </div>
+            </a>
+          {%endif%}
+          <div class="mt-4 px-2">
+            <a href="#" class="flex items-center gap-3 text-gray-500 hover:text-primary sidebar-icon">
+              <i class="fas fa-cog text-lg w-6 text-center"></i>
+              <span class="hidden lg:inline text-sm font-medium">Settings</span>
+            </a>
+          </div>
+        </div>
+      </aside>
+      <!-- MOBILE NAVBAR (icons only, under main nav) -->
+      <nav class="md:hidden fixed top-16 left-0 right-0 z-30 bg-white border-t border-gray-200 flex justify-around py-2">
+        <a href="/" class="text-gray-600 hover:text-primary text-lg"><i class="fas fa-home"></i></a>
+        <a href="/planner" class="text-gray-600 hover:text-primary text-lg"><i class="fas fa-calendar-check"></i></a>
+        <a href="/courses" class="text-primary text-lg"><i class="fas fa-briefcase"></i></a>
+        <a href="/notifications" class="text-gray-600 hover:text-primary text-lg"><i class="fas fa-bell"></i></a>
+        <a href="/chats" class="text-gray-600 hover:text-primary text-lg"><i class="fas fa-comments"></i></a>
+      </nav>
+    <!-- MAIN -->
+    <main class="flex-1 space-y-6 h-[calc(100vh-70px)] overflow-y-scroll">
+      <div class="flex items-start justify-between">
+        <a href="/courses/add" 
+          class="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition shadow-sm">
+          <i class="fas fa-plus mr-1"></i> Add Course
+        </a>
+
+        <div class="flex items-center gap-3">
+          <button id="showAllBtn" class="px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg">All</button>
+          <button id="showPrimaryBtn" class="px-3 py-1.5 text-sm bg-primary text-white rounded-lg">Primary</button>
+          <button id="showMoreBtn" class="px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg">More</button>
+        </div>
+      </div>
+
+      <!-- PRIMARY COURSES -->
+      <section id="primarySection" aria-labelledby="primary-heading" class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="primary-heading" class="text-xl font-semibold text-gray-800">Primary Courses <span class="ml-3 badge-primary">Recommended</span></h2>
+          <div class="text-sm text-gray-500 hidden sm:block">Premium material — highly recommended</div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- PRIMARY CARD A -->
+          {%for p_course in premium_courses%}
+          <a class="card-link primary-card hover-card rounded-xl2 overflow-hidden" href="{{p_course.url}}" target="_blank" rel="noopener noreferrer" aria-label="Open Python for Everybody">
+            <figure class="relative h-44 w-full">
+              <img src="{{p_course.thumbnail.url}}" alt="Python course thumbnail" class="w-full h-full object-cover">
+            </figure>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">{{p_course.title}}</h3>
+              <p class="text-sm text-gray-600 mt-1">{{p_course.description}}</p>
+              <div class="mt-3 flex items-center justify-between text-sm">
+                <div class="flex items-center gap-1 text-yellow-400">
+                  <span>
+                    {% if p_course.rating >= 1 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                    {% if p_course.rating >= 2 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                    {% if p_course.rating >= 3 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                    {% if p_course.rating >= 4 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                    {% if p_course.rating >= 5 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                  </span>
+
+                  <span class="text-gray-500 ml-1">{{p_course.rating}}</span>
+                </div>
+                <div class="text-gray-500">{{p_course.platform}} • {{p_course.rating}}</div>
+              </div>
+            </div>
+          </a>
+          {%endfor%}
+        </div>
+      </section>
+
+      <!-- MORE COURSES -->
+      <section id="moreSection" aria-labelledby="more-heading" class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="more-heading" class="text-xl font-semibold text-gray-800">More Courses</h2>
+          <div class="text-sm text-gray-500 hidden sm:block">Additional recommended resources</div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="moreGrid">
+          {%for course in courses%}
+          <a class="card-link bg-white rounded-xl2 card-shadow hover-card overflow-hidden" href="{{course.url}}" target="_blank" rel="noopener noreferrer" aria-label="Open HTML & CSS Masterclass">
+            <figure class="relative h-44 w-full">
+              <img src="{{course.thumbnail.url}}" alt="HTML & CSS" class="w-full h-full object-cover">
+            </figure>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900">{{course.title}}</h3>
+              <p class="text-sm text-gray-600 mt-1">{{course.description}}</p>
+              <div class="mt-3 flex items-center justify-between text-sm">
+                <div class="flex items-center gap-1 text-yellow-400">
+                  <span>
+                    {% if course.rating >= 1 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                    {% if course.rating >= 2 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                    {% if course.rating >= 3 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                    {% if course.rating >= 4 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                    {% if course.rating >= 5 %}<i class="fas fa-star"></i>{% else %} <i class="far fa-star"></i> {%endif%}
+                  </span>
+
+                  <span class="text-gray-500 ml-1">{{course.rating}}</span>
+                </div>
+                <div class="text-gray-500">{{course.platform}} • {{course.rating}}</div>
+              </div>
+            </div>
+          </a>
+          {%endfor%}
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- JS: basic UI interactions (filter + search) -->
+  <script>
+    (function(){
+      const showAllBtn = document.getElementById('showAllBtn');
+      const showPrimaryBtn = document.getElementById('showPrimaryBtn');
+      const showMoreBtn = document.getElementById('showMoreBtn');
+      const primarySection = document.getElementById('primarySection');
+      const moreSection = document.getElementById('moreSection');
+      const searchInput = document.getElementById('searchInput');
+      const moreGrid = document.getElementById('moreGrid');
+
+      // initial state = show all
+      function setActive(button) {
+        [showAllBtn, showPrimaryBtn, showMoreBtn].forEach(b => {
+          b.classList.remove('bg-primary','text-white');
+          b.classList.add('bg-white');
+          b.classList.add('border','border-gray-200');
+        });
+        button.classList.add('bg-primary','text-white');
+        button.classList.remove('bg-white');
+        button.classList.remove('border','border-gray-200');
+      }
+      setActive(showAllBtn);
+
+      showAllBtn.addEventListener('click', () => {
+        primarySection.style.display = '';
+        moreSection.style.display = '';
+        setActive(showAllBtn);
+      });
+      showPrimaryBtn.addEventListener('click', () => {
+        primarySection.style.display = '';
+        moreSection.style.display = 'none';
+        setActive(showPrimaryBtn);
+      });
+      showMoreBtn.addEventListener('click', () => {
+        primarySection.style.display = 'none';
+        moreSection.style.display = '';
+        setActive(showMoreBtn);
+      });
+
+      // simple search across titles & descriptions
+      function filterCourses() {
+        const q = (searchInput?.value || '').trim().toLowerCase();
+        if (!q) {
+          // show all cards
+          document.querySelectorAll('.card-link').forEach(card => card.style.display = '');
+          return;
+        }
+        document.querySelectorAll('.card-link').forEach(card => {
+          const text = (card.innerText || '').toLowerCase();
+          card.style.display = text.includes(q) ? '' : 'none';
+        });
+      }
+      searchInput?.addEventListener('input', filterCourses);
+
+      // keyboard quick-focus for search using "/"
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          searchInput?.focus();
+        }
+      });
+    })();
+  </script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const messages = document.querySelectorAll('.flash-message');
+
+    messages.forEach((msg, index) => {
+      // Animate in
+      setTimeout(() => {
+        msg.classList.remove('opacity-0', 'translate-x-4');
+        msg.classList.add('opacity-100', 'translate-x-0');
+      }, 100 * index);
+
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        msg.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => msg.remove(), 500);
+      }, 5000 + (index * 200));
+
+      // Close button
+      msg.querySelector('button').addEventListener('click', () => {
+        msg.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => msg.remove(), 400);
+      });
+    });
+  });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const notifIcons = document.querySelectorAll('.fa-bell');
+      const chatIcons = document.querySelectorAll('.fa-comments');
+
+      function updateUnreadCounts() {
+        fetch("/api/unread_counts/")
+          .then(response => response.json())
+          .then(data => {
+            const notifCount = data.notifications;
+            const msgCount = data.messages;
+
+            // Handle all chat icons
+            chatIcons.forEach(icon => {
+              let msgBadge = icon.parentElement.querySelector('.msg-badge');
+              if (!msgBadge) {
+                msgBadge = document.createElement('span');
+                msgBadge.className = 'msg-badge';
+                icon.parentElement.style.position = 'relative';
+                icon.parentElement.appendChild(msgBadge);
+              }
+
+              msgBadge.className = 'notif-badge absolute sm:absolute sm:-top-1 sm:-left-1 bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full sm:inline-block hidden sm:block';
+              msgBadge.style.display = msgCount > 0 ? 'inline-block' : 'none';
+            });
+
+            // Handle all notification icons
+            notifIcons.forEach(icon => {
+              let notifBadge = icon.parentElement.querySelector('.notif-badge');
+              if (!notifBadge) {
+                notifBadge = document.createElement('span');
+                notifBadge.className = 'notif-badge';
+                icon.parentElement.style.position = 'relative';
+                icon.parentElement.appendChild(notifBadge);
+              }
+
+              notifBadge.className = 'notif-badge absolute sm:absolute sm:-top-1 sm:-left-1 bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full sm:inline-block hidden sm:block';
+              notifBadge.textContent = notifCount > 0 ? notifCount : '';
+              notifBadge.style.display = notifCount > 0 ? 'inline-block' : 'none';
+            });
+          })
+          .catch(err => console.error('Error fetching unread counts:', err));
+      }
+
+      // Fetch immediately, then every 20 seconds
+      updateUnreadCounts();
+      setInterval(updateUnreadCounts, 20000);
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+{%load static%}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Evolv — Add Course</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#EF7722',
+            accent: '#0BA6DF',
+            warm: '#FAA533',
+            bgsoft: '#F8F8F8',
+            neutralText: '#1E1E1E'
+          },
+          borderRadius: {
+            xl2: '18px'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .card-shadow { box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+    .hover-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.08); transition: all 0.2s ease; }
+    .glass { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.8); }
+    .thumbnail-preview img {
+      transition: all 0.3s ease;
+      object-fit: cover;
+    }
+    .thumbnail-preview:hover img {
+      transform: scale(1.03);
+      filter: brightness(1.05);
+    }
+  </style>
+</head>
+
+<body class="bg-bgsoft text-neutralText">
+
+  <!-- NAVBAR -->
+  <nav class="glass fixed w-full top-0 left-0 z-30 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-gradient-to-br from-primary to-warm rounded-lg flex items-center justify-center text-white font-semibold text-base">
+            E
+          </div>
+          <span class="font-semibold text-gray-800 text-lg">Evolv</span>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="/" class="text-sm font-medium text-gray-600 hover:text-primary transition">Home</a>
+          <a href="/planner" class="text-sm font-medium text-gray-600 hover:text-primary transition">Planner</a>
+          <a href="/grow" class="text-sm font-medium text-primary transition">Grow</a>
+          <a href="/profile" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <input type="text" placeholder="Search..." class="hidden sm:block bg-white border border-gray-200 text-sm px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent w-44 lg:w-60" />
+          <button class="px-4 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition">+ Post</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex justify-center items-center min-h-screen pt-24 pb-12 px-4">
+    <div class="bg-white p-8 rounded-xl2 card-shadow max-w-lg w-full space-y-6 hover-card">
+      <h1 class="text-2xl font-semibold text-gray-800 text-center mb-4">Add New Course</h1>
+
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {%csrf_token%}
+        <div class="thumbnail-preview flex justify-center">
+          <label for="thumbnail" class="relative cursor-pointer group">
+            <img id="previewImage" src="{% static 'imgs/course_placeholder.png'%}" alt="Thumbnail Preview" class="rounded-xl2 w-full max-h-60 object-cover border border-gray-200">
+            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition rounded-xl2">
+              <p class="text-white text-sm font-medium"><i class="fas fa-camera mr-2"></i>Change Thumbnail</p>
+            </div>
+            <input id="thumbnail" name="thumbnail" type="file" accept="image/*" class="hidden" onchange="previewThumbnail(event)">
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Course Title</label>
+          <input type="text" name="title" placeholder="Enter course title" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Platform</label>
+          <input type="text" name="platform" placeholder="e.g. Udemy/Coursera" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea rows="4" name="description" placeholder="Briefly describe this course" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm"></textarea>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Course Link</label>
+          <input type="url" name="url" placeholder="https://example.com/course" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Confirm you have the right to add this course : </label>
+          <input type="checkbox" required name="url" placeholder="https://example.com/course" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm">
+        </div>
+        <div class="pt-4 flex justify-end">
+          <button type="submit" class="bg-primary text-white px-5 py-2 rounded-lg font-medium text-sm hover:bg-orange-500 transition">
+            Add Course
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    function previewThumbnail(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('previewImage').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
+
+</body>
+</html>

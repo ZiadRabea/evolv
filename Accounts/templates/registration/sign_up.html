@@ -1,0 +1,222 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign Up - Evolv</title>
+  <link rel="icon" href="{% static 'imgs/logo.png' %}" type="image/png"> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #EF7722;
+      --accent: #0BA6DF;
+      --warm: #FAA533;
+      --background: #F8F8F8;
+      --card-bg: #ffffff;
+      --text: #1E1E1E;
+      --muted: #8a8a8a;
+      --border: #e7e7e7;
+      --radius: 16px;
+      --transition: 0.25s ease;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: var(--background);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: var(--text);
+    }
+
+    .signup-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 440px;
+      padding: 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .signup-card::before {
+      content: "";
+      position: absolute;
+      top: -40%;
+      left: -40%;
+      width: 180%;
+      height: 180%;
+      background: radial-gradient(circle at 75% 25%, rgba(11,166,223,0.07), transparent 65%);
+      z-index: 0;
+    }
+
+    .signup-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1.4rem;
+    }
+
+    .field {
+      text-align: left;
+      margin-bottom: 1rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+      transition: border var(--transition), box-shadow var(--transition);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(11,166,223,0.15);
+      outline: none;
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--warm));
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(239,119,34,0.25);
+    }
+
+    .signup-footer {
+      margin-top: 1.4rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .signup-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .signup-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Error message styling (same as login page) */
+    .error-msg {
+      background: rgba(255, 77, 77, 0.08);
+      color: #d92d2d;
+      border: 1px solid rgba(255, 77, 77, 0.15);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    ul.errorlist {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0;
+      color: #d92d2d;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="signup-card">
+    <div class="signup-content">
+      <h1>Create Account</h1>
+
+      {% if form.errors %}
+        <div class="error-msg">
+          <strong>There were some problems with your submission:</strong>
+          <ul>
+            {% for field in form %}
+              {% for error in field.errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="field">
+          <label for="id_username">Username</label>
+          {{ form.username }}
+        </div>
+
+        <div class="field">
+          <label for="id_first_name">Display Name</label>
+          {{ form.first_name }}
+        </div>
+
+        <div class="field">
+          <label for="id_email">Email (optional)</label>
+          {{ form.email }}
+        </div>
+
+        <div class="field">
+          <label for="id_password1">Password</label>
+          {{ form.password1 }}
+        </div>
+
+        <div class="field">
+          <label for="id_password2">Confirm Password</label>
+          {{ form.password2 }}
+        </div>
+
+        <button class="btn" type="submit">Sign Up</button>
+      </form>
+
+      <div class="signup-footer">
+        <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("id_username").placeholder = "Username";
+    document.getElementById("id_first_name").placeholder = "Full Name";
+    document.getElementById("id_email").placeholder = "your@email.com";
+    document.getElementById("id_password1").placeholder = "Password";
+    document.getElementById("id_password2").placeholder = "Confirm Password";
+  </script>
+</body>
+</html>

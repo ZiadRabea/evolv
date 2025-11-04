@@ -1,0 +1,240 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Evolv — Edit Profile</title>
+  
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#EF7722',
+              accent: '#0BA6DF',
+              warm: '#FAA533',
+              bgsoft: '#F8F8F8',
+              neutralText: '#1E1E1E'
+            },
+            borderRadius: {
+              xl2: '18px'
+            }
+          }
+        }
+      }
+    </script>
+  
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      .card-shadow { box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+      .hover-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.08); transition: all 0.2s ease; }
+      .glass { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.8); }
+      .skill-tag { background-color: #f2f2f2; border-radius: 9999px; padding: 4px 10px; display: inline-flex; align-items: center; font-size: 0.85rem; margin: 3px; }
+      .skill-tag button { margin-left: 6px; color: #888; font-size: 0.75rem; }
+      .skill-tag button:hover { color: #EF7722; }
+    </style>
+  </head>
+
+  <body class="bg-bgsoft text-neutralText">
+
+    <!-- NAVBAR -->
+    <nav class="glass fixed w-full top-0 left-0 z-30 border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-gradient-to-br from-primary to-warm rounded-lg flex items-center justify-center text-white font-semibold text-base">E</div>
+            <span class="font-semibold text-gray-800 text-lg">Evolv</span>
+          </div>
+
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/" class="text-sm font-medium text-gray-600 hover:text-primary transition">Home</a>
+            <a href="/planner" class="text-sm font-medium text-gray-600 hover:text-primary transition">Planner</a>
+            <a href="#" class="text-sm font-medium text-gray-600 hover:text-primary transition">Grow</a>
+            {%if user.is_authenticated%}
+              <a href="/in/{{user.profile.slug}}" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+            {%else%}
+              <a href="/accounts/login" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+            {%endif%}
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button class="px-4 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition">+ Post</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="pt-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+      <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- EDIT PROFILE CARD -->
+        <div class="bg-white rounded-xl2 p-6 card-shadow">
+          <h2 class="font-semibold text-lg text-gray-800 mb-4">Edit Profile</h2>
+
+          <div class="flex items-center gap-6 mb-6">
+            <div class="relative group cursor-pointer">
+              {% if user.profile.profile_pic %}
+                <img id="profilePreview" src="{{ user.profile.profile_pic.url }}" alt="Profile"
+                  class="w-24 h-24 rounded-full object-cover border border-gray-300 transition duration-200 group-hover:opacity-80">
+              {% else %}
+                <img id="profilePreview" src="{% static 'imgs/profile_placeholder.png' %}" alt="Profile"
+                  class="w-24 h-24 rounded-full object-cover border border-gray-300 transition duration-200 group-hover:opacity-80">
+              {% endif %}
+              <div class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition duration-200">
+                <i class="fa-solid fa-plus text-white text-xl"></i>
+              </div>
+              <input id="profileUpload" name="profile_pic" type="file" accept="image/*" class="hidden" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+              <p class="text-xs text-gray-500">Click the image to upload or change your profile photo.</p>
+            </div>
+          </div>
+
+          <!-- BASIC INFO -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="John Doe" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Title / Role</label>
+              <input type="text" name="job_title" value="{{ profileform.job_title.value }}" placeholder="Software Engineer" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent focus:outline-none">
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+            <textarea rows="3" name="bio" placeholder="A short bio about you..." class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent focus:outline-none">{{ profileform.bio.value }}</textarea>
+          </div>
+
+          <!-- SOCIAL LINKS -->
+          <div class="mb-6">
+            <h3 class="font-medium text-gray-800 mb-2">Social Links</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+                <i class="fa-brands fa-github text-gray-600"></i>
+                {%if profileform.github.value%}
+                  <input type="url" name="github" value="{{ profileform.github.value }}" placeholder="GitHub URL" class="w-full text-sm focus:outline-none">
+                {%else%}
+                  <input type="url" name="github" value="" placeholder="GitHub URL" class="w-full text-sm focus:outline-none">
+                {%endif%}
+              </div>
+              <div class="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+                <i class="fa-brands fa-linkedin text-blue-600"></i>
+                {%if profileform.linkedin.value%}
+                  <input type="url" name="linkedin" value="{{ profileform.linkedin.value }}" placeholder="LinkedIn URL" class="w-full text-sm focus:outline-none">
+                {%else%}
+                  <input type="url" name="linkedin" value="" placeholder="LinkedIn URL" class="w-full text-sm focus:outline-none">
+                {%endif%}
+              </div>
+              <div class="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+                <i class="fa-brands fa-x-twitter text-gray-800"></i>
+                {%if profileform.twitter.value%}
+                  <input type="url" name="twitter" value="{{ profileform.twitter.value }}" placeholder="Twitter URL" class="w-full text-sm focus:outline-none">
+                {%else%}
+                  <input type="url" name="twitter" value="" placeholder="Twitter URL" class="w-full text-sm focus:outline-none">
+                {%endif%}
+              </div>
+            </div>
+          </div>
+
+          <!-- SKILLS -->
+          <div class="mb-6">
+            <h3 class="font-medium text-gray-800 mb-2">Skills</h3>
+            <div id="skillsContainer" class="flex flex-wrap"></div>
+            <div class="flex items-center gap-2 mt-2">
+              <input id="skillInput" type="text" placeholder="Add a skill..." class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent focus:outline-none flex-1">
+              <input type="hidden" name="skills" id="skillshiddeninput">
+              <button id="addSkillBtn" class="bg-accent text-white text-sm px-3 py-2 rounded-lg hover:opacity-90">Add</button>
+            </div>
+          </div>
+
+        <!-- SAVE BUTTON -->
+        <div class="flex justify-end">
+          <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition">Save Changes</button>
+        </div>
+      </form>
+
+    </main>
+
+    <!-- JS -->
+     <script>
+      const rawSkills = "{{profileform.instance.skills|escapejs}}";
+      const existingSkills = rawSkills
+        .replace(/[\[\]'"]+/g, '')   // remove brackets and quotes
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      console.log(existingSkills);
+    </script>
+    <script>
+  
+
+      // Profile Picture Upload & Preview
+      const profileUpload = document.getElementById('profileUpload');
+      const profilePreview = document.getElementById('profilePreview');
+      profilePreview.parentElement.addEventListener('click', () => profileUpload.click());
+      profileUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) profilePreview.src = URL.createObjectURL(file);
+      });
+
+      // Skills Handling
+      const skillsContainer = document.getElementById('skillsContainer');
+      const addSkillBtn = document.getElementById('addSkillBtn');
+      const skillInput = document.getElementById('skillInput');
+      const hiddenInput = document.getElementById('skillshiddeninput');
+      let skills = existingSkills.length ? existingSkills : [];
+
+      function renderSkills() {
+        skillsContainer.innerHTML = '';
+        skills.forEach((skill, index) => {
+          const tag = document.createElement('div');
+          tag.className = 'skill-tag';
+          tag.innerHTML = `${skill} <button type="button" onclick="removeSkill(${index})"><i class="fa-solid fa-xmark"></i></button>`;
+          skillsContainer.appendChild(tag);
+        });
+        hiddenInput.value = skills.join(',');
+      }
+
+      function removeSkill(index) {
+        skills.splice(index, 1);
+        renderSkills();
+      }
+
+      addSkillBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const val = skillInput.value.trim();
+        if (val && !skills.includes(val)) {
+          skills.push(val);
+          skillInput.value = '';
+          renderSkills();
+        }
+      });
+
+      skillInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addSkillBtn.click();
+        }
+      });
+
+      document.querySelector('form').addEventListener('submit', () => {
+        hiddenInput.value = skills.join(',');
+      });
+
+      renderSkills();
+    </script>
+
+  </body>
+</html>

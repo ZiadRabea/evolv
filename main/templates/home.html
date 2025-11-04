@@ -1,0 +1,824 @@
+{%load static%}
+{% load markdown_deux_tags %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Evolv — Home</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- markdown renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#EF7722',
+              accent: '#0BA6DF',
+              warm: '#FAA533',
+              bgsoft: '#F8F8F8',
+              neutralText: '#1E1E1E'
+            },
+            borderRadius: {
+              xl2: '18px'
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      .card-shadow { box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+      .hover-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.08); transition: all 0.18s ease; }
+      .glass { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.8); }
+      .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 50; align-items: center; justify-content: center; padding: 20px; }
+      .modal.active { display: flex; }
+      .hide-scroll-bar::-webkit-scrollbar { display: none; }
+      .hide-scroll-bar { -ms-overflow-style: none; scrollbar-width: none; }
+      .sidebar-icon { transition: all 0.16s ease; }
+      .sidebar-icon:hover { color: rgb(239 119 34); transform: scale(1.06); }
+      .editor-toolbar button { min-width: 36px; }
+      .emoji-grid { max-width: 360px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+      .emoji-item { cursor: pointer; font-size: 18px; padding: 6px; border-radius: 6px; text-align:center; }
+      .emoji-item:hover { background: #f3f4f6; transform: translateY(-2px); }
+      .thumb { width:84px; height:84px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb; }
+      .file-chip { font-size: 12px; padding:6px 8px; border-radius:999px; background:#fafafa; border:1px solid #eee; display:inline-flex; gap:8px; align-items:center; }
+      .modal-card { max-height: calc(100vh - 80px); overflow:auto; }
+      .toolbar-btn { background: white; border: 1px solid #eef2f7; padding:6px; border-radius:8px; }
+      .toolbar-btn:hover { background: #f9fafb; }
+    </style>
+  </head>
+
+  <body class="bg-bgsoft text-neutralText">
+
+    <!-- NAVBAR -->
+    <nav class="glass fixed w-full top-0 left-0 z-40 border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-gradient-to-br from-primary to-warm rounded-lg flex items-center justify-center text-white font-semibold text-base">
+              E
+            </div>
+            <span class="font-semibold text-gray-800 text-lg">Evolv</span>
+          </div>
+
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/" class="text-sm font-medium text-gray-600 border-b-2 border-primary">Home</a>
+            <a href="/planner" class="text-sm font-medium text-gray-600 hover:text-primary transition">Planner</a>
+            <a href="/courses" class="text-sm font-medium text-gray-600 hover:text-primary transition">Grow</a>
+            {%if user.is_authenticated%}
+              <a href="/in/{{user.profile.slug}}" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+            {%else%}
+              <a href="/accounts/login" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+            {%endif%}
+          </div>
+
+          <form method="GET" class="flex items-center gap-3">
+            {%csrf_token%}
+            <input id="searchInput" type="text" name="text" placeholder="Search..." class="bg-white border border-gray-200 text-sm px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent w-32 sm:w-44 lg:w-60" />
+            <button type="submit" class="px-4 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition">Search</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    <!-- LAYOUT -->
+    <div class="flex mt-16 max-w-7xl mx-auto">
+
+      <!-- LEFT NAV SIDEBAR -->
+      <aside class="hidden md:flex w-20 sm:w-24 lg:w-56 h-[calc(100vh-70px)] px-3 py-6 glass border-r border-gray-200 sticky top-16 flex-col">
+        <div class="flex flex-col gap-4">
+          <a href="/" class="flex items-center gap-3 px-2 py-2 text-primary sidebar-icon">
+            <i class="fas fa-home text-lg w-6 text-center"></i>
+            <span class="hidden lg:inline text-sm font-medium">Home</span>
+          </a>
+
+          <a href="/planner" class="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-primary sidebar-icon">
+            <i class="fas fa-calendar-check text-lg w-6 text-center"></i>
+            <span class="hidden lg:inline text-sm font-medium">Planner</span>
+          </a>
+
+          <a href="/courses" class="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-primary sidebar-icon">
+            <i class="fas fa-briefcase text-lg w-6 text-center"></i>
+            <span class="hidden lg:inline text-sm font-medium">Grow</span>
+          </a>
+
+          <a href="/notifications" class="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-primary font-medium sidebar-icon">
+              <i class="fas fa-bell text-lg w-6 text-center"></i>
+              <span class="hidden lg:inline text-sm">Notifications</span>
+          </a>
+
+          <a href="/chats" class="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-primary sidebar-icon">
+            <i class="fas fa-comments text-lg w-6 text-center"></i>
+            <span class="hidden lg:inline text-sm font-medium">Chats</span>
+          </a>
+        </div>
+
+        <div class="mt-auto">
+          <!-- Profile summary (compact) -->
+          {%if user.is_authenticated%}
+            <a href="/in/{{user.profile.slug}}">
+              <div class="hidden lg:flex items-center gap-3 p-3 rounded-xl2 bg-white card-shadow">
+                {%if user.profile.profile_pic%}
+                  <img src="{{user.profile.profile_pic.url}}" class="w-10 h-10 rounded-full object-cover">
+                {%else%}
+                  <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-10 h-10 rounded-full object-cover">
+                {%endif%}
+                <div>
+                  <div class="text-sm font-medium">{{user.first_name}}</div>
+                  <div class="text-xs text-gray-500">{{user.profile.job_title}}</div>
+                </div>
+              </div>
+            </a>
+          {%else%}
+            <a href="/accounts/login">
+              <div class="hidden lg:flex items-center gap-3 p-3 rounded-xl2 bg-white card-shadow">
+                <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-10 h-10 rounded-full object-cover">
+                <div>
+                  <div class="text-sm font-medium">User Name</div>
+                  <div class="text-xs text-gray-500">Job Title</div>
+                </div>
+              </div>
+            </a>
+          {%endif%}
+          <div class="mt-4 px-2">
+            <a href="#" class="flex items-center gap-3 text-gray-500 hover:text-primary sidebar-icon">
+              <i class="fas fa-cog text-lg w-6 text-center"></i>
+              <span class="hidden lg:inline text-sm font-medium">Settings</span>
+            </a>
+          </div>
+        </div>
+      </aside>
+      <!-- MOBILE NAVBAR (icons only, under main nav) -->
+      <nav class="md:hidden fixed top-16 left-0 right-0 z-30 bg-white border-t border-gray-200 flex justify-around py-2">
+        <a href="/" class="text-primary text-lg"><i class="fas fa-home"></i></a>
+        <a href="/planner" class="text-gray-600 hover:text-primary text-lg"><i class="fas fa-calendar-check"></i></a>
+        <a href="/courses" class="text-gray-600 hover:text-primary text-lg"><i class="fas fa-briefcase"></i></a>
+        <a href="/notifications" class="text-gray-600 hover:text-primary text-lg"><i class="fas fa-bell"></i></a>
+        <a href="/chats" class="text-gray-600 hover:text-primary text-lg"><i class="fas fa-comments"></i></a>
+      </nav>
+      <!-- MAIN CONTENT (FEED) -->
+      <main class="flex-1 p-6 space-y-6 lg:col-span-7">
+        <!-- Stories -->
+        
+        <!-- <div class="bg-white rounded-xl2 p-4 card-shadow flex overflow-x-auto gap-4 hide-scroll-bar">
+          <div class="flex gap-4">
+            <div class="flex flex-col items-center text-center min-w-[70px]">
+              <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-accent to-primary p-1">
+                <img src="images/profile.jpg" class="rounded-full border-2 border-white w-full h-full">
+              </div>
+              <p class="text-xs mt-1 text-gray-600">You</p>
+            </div>
+            <div class="flex flex-col items-center text-center min-w-[70px]">
+              <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-accent to-primary p-1">
+                <img src="images/sara.jpg" class="rounded-full border-2 border-white w-full h-full">
+              </div>
+              <p class="text-xs mt-1 text-gray-600">Sarah</p>
+            </div>
+            <div class="flex flex-col items-center text-center min-w-[70px]">
+              <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-accent to-primary p-1">
+                <img src="images/omar.jpg" class="rounded-full border-2 border-white w-full h-full">
+              </div>
+              <p class="text-xs mt-1 text-gray-600">Omar</p>
+            </div>
+          </div>
+        </div> -->
+
+        <!-- Add Post Widget -->
+        <div class="bg-white rounded-xl2 p-4 card-shadow hover-card mt-10 md:mt-0">
+          <div class="flex items-start gap-3 mb-3">
+            {%if user.is_authenticated%}
+              <a href="/in/{{user.profile.slug}}">
+                {%if user.profile.profile_pic%}
+                  <img src="{{user.profile.profile_pic.url}}" class="w-11 h-11 rounded-full object-cover">
+                {%else%} 
+                  <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-11 h-11 rounded-full object-cover">
+                {%endif%}
+              </a>  
+              <button id="openPostModal2" class="flex-1 bg-bgsoft text-gray-600 text-sm text-left px-4 py-2 rounded-full border border-gray-200 hover:border-accent hover:bg-white transition">
+                What's on your mind?
+              </button>
+            {%else%}
+              <img onclick="window.open('/accounts/login')" src="{%static 'imgs/profile_placeholder.png'%}" class="w-11 h-11 rounded-full object-cover">
+          
+              <button onclick="window.open('/accounts/login')" class="flex-1 bg-bgsoft text-gray-600 text-sm text-left px-4 py-2 rounded-full border border-gray-200 hover:border-accent hover:bg-white transition">
+                What's on your mind?
+              </button>
+            {%endif%}
+          </div>
+          <div class="flex justify-between text-gray-500 text-sm border-t pt-2">
+            <button id="openPostModal" class="flex items-center gap-2 hover:text-accent transition">
+              <i class="fa-regular fa-image text-accent"></i> Photo
+            </button>
+            <button class="flex items-center gap-2 hover:text-warm transition">
+              <i class="fa-solid fa-video text-warm"></i> Video
+            </button>
+            <button class="flex items-center gap-2 hover:text-primary transition">
+              <i class="fa-solid fa-link text-primary"></i> Link
+            </button>
+            <button class="flex items-center gap-2 hover:text-gray-700 transition">
+              <i class="fa-solid fa-ellipsis-h"></i> More
+            </button>
+          </div>
+        </div>
+
+        <!-- feed post -->
+        {%for post in posts%}
+        <article class="bg-white rounded-xl2 p-5 card-shadow hover-card space-y-3">
+          <div class="flex items-center justify-between w-full">
+          <div class="flex items-center space-x-3">
+            <a href="/in/{{post.owner.slug}}" class="flex items-center space-x-2">
+              {% if post.owner.profile_pic %}
+                <img src="{{post.owner.profile_pic.url}}" class="w-10 h-10 rounded-full">
+              {% else %}
+                <img src="{% static 'imgs/profile_placeholder.png' %}" class="w-10 h-10 rounded-full">
+              {% endif %}
+              <div>
+                <div class="font-medium text-sm">{{ post.owner.user.first_name }}</div>
+                <div class="text-xs text-gray-500">
+                  {{ post.date|timesince }} • ago | {{ post.audience }}
+                </div>
+              </div>
+            </a>
+          </div>
+
+          {% if post.owner == user.profile %}
+            <a href="/post/{{ post.id }}/delete"
+              class="flex items-center justify-center w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 transition"
+              title="Delete this post">
+              <i class="fa-solid fa-trash text-red-500 text-sm"></i>
+            </a>
+          {% endif %}
+        </div>
+
+          <p class="text-base text-gray-800 leading-relaxed">
+            {{post.text|markdown}}
+          </p>
+          {%if post.poster%}
+          <img src="{{post.poster.url}}" class="rounded-lg w-full object-cover">
+          {%endif%}
+          <div class="flex items-center justify-between pt-3 text-sm text-gray-500">
+            <div class="flex items-center gap-6">
+              <a href="post/{{post.id}}/like">
+                <button class="hover:text-primary flex items-center gap-1 transition">
+                  {%if user.is_authenticated and user.profile in post.likes.all%}
+                    <i onclick="this.style.color='#a0aec0'" style="color: red;" class="fa-regular fa-heart"></i> 
+                  {%else%}
+                    <i onclick="this.style.color='red'" class="fa-regular fa-heart"></i> 
+                  {%endif%}
+                  <span>{{post.likes.count}}</span>
+                </button>
+              </a>
+              <a href="/post/{{post.id}}"><button class="hover:text-accent flex items-center gap-1 transition">
+                <i class="fa-regular fa-comment"></i> <span>{{post.comment_set.count}}</span>
+              </button></a>
+            </div>
+            <button class="hover:text-gray-700 transition flex items-center gap-1">
+              <i class="fa-solid fa-share"></i> Share
+            </button>
+          </div>
+        </article>
+        {%endfor%}
+
+        {% if posts.has_other_pages %}
+          <div class="flex justify-center mt-8">
+            <nav class="inline-flex items-center space-x-2 bg-white p-2 rounded-xl2 shadow-sm border border-gray-100">
+              <!-- Previous -->
+              {% if posts.has_previous %}
+                <a href="?page={{ posts.previous_page_number }}" 
+                  class="px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-primary hover:text-white transition">
+                  <i class="fa-solid fa-angle-left"></i>
+                </a>
+              {% else %}
+                <span class="px-3 py-1.5 rounded-lg text-sm text-gray-300 bg-gray-50 cursor-not-allowed">
+                  <i class="fa-solid fa-angle-left"></i>
+                </span>
+              {% endif %}
+
+              <!-- Page numbers -->
+              {% for num in posts.paginator.page_range %}
+                {% if posts.number == num %}
+                  <span class="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-semibold shadow-sm">{{ num }}</span>
+                {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+                  <a href="?page={{ num }}" 
+                    class="px-4 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-accent hover:text-white transition">{{ num }}</a>
+                {% endif %}
+              {% endfor %}
+
+              <!-- Next -->
+              {% if posts.has_next %}
+                <a href="?page={{ posts.next_page_number }}" 
+                  class="px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-primary hover:text-white transition">
+                  <i class="fa-solid fa-angle-right"></i>
+                </a>
+              {% else %}
+                <span class="px-3 py-1.5 rounded-lg text-sm text-gray-300 bg-gray-50 cursor-not-allowed">
+                  <i class="fa-solid fa-angle-right"></i>
+                </span>
+              {% endif %}
+            </nav>
+          </div>
+        {% endif %}
+
+      </main>
+
+      <!-- RIGHT SIDEBAR: PROFILE CARD + FOLLOWERS -->
+      <aside class="hidden lg:block lg:col-span-3 w-80 px-4 py-6">
+        <!-- Profile card -->
+       {%if user.is_authenticated%}
+        <a href="/in/{{user.profile.slug}}">
+          <div class="bg-gradient-to-br from-white to-bgsoft rounded-xl2 p-5 card-shadow hover-card mb-4">
+            <div class="flex flex-col items-center text-center">
+              {%if user.profile.profile_pic%}
+                <img src="{{user.profile.profile_pic.url}}" class="w-20 h-20 rounded-full object-cover shadow-md">
+              {%else%}
+                <img src="{%static 'imgs/profile_placeholder.png'}" class="w-20 h-20 rounded-full object-cover shadow-md">
+              {%endif%}
+              <div class="mt-3 font-semibold text-gray-800 text-base">{{user.first_name}}</div>
+              <div class="text-xs text-gray-500 mb-2">{{user.profile.job_title}}</div>
+              <p class="text-sm text-gray-600 leading-relaxed max-w-[220px]">{{user.profile.bio}}</p>
+              <div class="mt-4 border-t pt-3 flex justify-between w-full text-xs text-gray-500">
+                <div><strong class="text-primary">{{user.profile.followers.count}}</strong> Followers</div>
+                <div><strong class="text-primary">{{user.profile.following.count}}</strong> Following</div>
+              </div>
+            </div>
+          </div>
+        </a>
+        {%else%}
+        <a href="/accounts/login">
+          <div class="bg-gradient-to-br from-white to-bgsoft rounded-xl2 p-5 card-shadow hover-card mb-4">
+            <div class="flex flex-col items-center text-center">
+              <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-20 h-20 rounded-full object-cover shadow-md">
+              <div class="mt-3 font-semibold text-gray-800 text-base">Username</div>
+              <div class="text-xs text-gray-500 mb-2">Job Title</div>
+              <p class="text-sm text-gray-600 leading-relaxed max-w-[220px]">Bio</p>
+              <div class="mt-4 border-t pt-3 flex justify-between w-full text-xs text-gray-500">
+                <div><strong class="text-primary">0</strong> Followers</div>
+                <div><strong class="text-primary">0</strong> Following</div>
+              </div>
+            </div>
+          </div>
+        </a>
+        {%endif%}
+        <!-- Followers (small list) -->
+
+        <div class="bg-white rounded-xl2 p-5 card-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <div class="font-medium text-sm text-gray-600">Followers</div>
+            <a href="#" class="text-xs text-accent hover:underline">See all</a>
+          </div>
+          {%for follower in user.profile.followers.all%}
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <a href="/in/{{follower.slug}}">
+                <div class="flex items-center gap-2">
+                  {%if follower.profile_pic%}
+                    <img src="{{follower.profile_pic.url}}" class="w-9 h-9 rounded-full">
+                  {%else%}
+                    <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-9 h-9 rounded-full">
+                  {%endif%}
+                  <div>
+                    <div class="text-sm font-medium">{{follower.profile.user.first_name}}</div>
+                    <div class="text-xs text-gray-500">{{follower.job_title}}</div>
+                  </div>
+                </div>
+              </a>
+              {%if not user.profile in follower.followers.all%}
+                <a href="in/{{follower.slug}}/follow"><button class="text-xs bg-accent text-white px-2.5 py-1 rounded-lg hover:opacity-90">Follow</button></a>
+              {%else%}
+                <a href="in/{{follower.slug}}/follow"><button class="text-xs bg-primary text-white px-2.5 py-1 rounded-lg hover:opacity-90">Unfollow</button></a>
+              {%endif%}
+            </div> 
+            {%endfor%}
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ENHANCED POST MODAL -->
+    <form method="POST" enctype="multipart/form-data" id="postModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="createPostTitle">
+      {%csrf_token%}
+      <div class="bg-white rounded-xl2 p-4 w-full max-w-4xl mx-auto card-shadow modal-card">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            {%if user.profile.profile_pic%}
+              <img src="{{user.profile.profile_pic.url}}" class="w-11 h-11 rounded-full">
+            {%else%}
+              <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-11 h-11 rounded-full">
+            {%endif%}
+            <div>
+              <div class="font-medium text-sm">{{user.first_name}}</div>
+              <div id="createPostTitle" class="text-xs text-gray-500">Share something with your network</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            👀
+            <select name="audience" id="audienceTop" class="text-sm px-3 py-1 rounded border border-gray-200">
+              <option value="public">Anyone</option>
+              <option value="connections">Connections</option>
+              <option value="onlyme">Only me</option>
+            </select>
+            <button id="closePostModal" type="button" class="text-gray-500 hover:text-gray-800 text-xl leading-none">&times;</button>
+          </div>
+        </div>
+
+        <!-- toolbar -->
+        <div class="border border-gray-100 rounded-md p-3 mb-3 flex items-start gap-3">
+          <div class="flex flex-wrap gap-2 editor-toolbar">
+            <button type="button" title="Bold (Ctrl+B)" class="toolbar-btn px-2" data-action="bold"><i class="fa-solid fa-bold"></i></button>
+            <button type="button" title="Italic (Ctrl+I)" class="toolbar-btn px-2" data-action="italic"><i class="fa-solid fa-italic"></i></button>
+            <button type="button" title="Heading" class="toolbar-btn px-2" data-action="h1"><i class="fa-solid fa-heading"></i></button>
+            <button type="button" title="Code block" class="toolbar-btn px-2" data-action="code"><i class="fa-solid fa-code"></i></button>
+            <button type="button" title="Quote" class="toolbar-btn px-2" data-action="quote"><i class="fa-solid fa-quote-left"></i></button>
+            <button type="button" title="Bulleted list" class="toolbar-btn px-2" data-action="ul"><i class="fa-solid fa-list-ul"></i></button>
+            <button type="button" title="Numbered list" class="toolbar-btn px-2" data-action="ol"><i class="fa-solid fa-list-ol"></i></button>
+            <button id="linkBtn" type="button" title="Insert link" class="toolbar-btn px-2" data-action="link"><i class="fa-solid fa-link"></i></button>
+          </div>
+
+          <div class="border-l h-6 mx-3"></div>
+
+          <div class="flex items-center gap-2">
+            <button id="emojiBtn" type="button" title="Insert emoji" class="toolbar-btn px-2"><i class="fa-regular fa-face-smile"></i></button>
+
+            <button id="uploadTrigger" type="button" title="Add files (images, pdf...)" class="toolbar-btn px-2">
+              <i class="fa-regular fa-image"></i>
+            </button>
+            <input id="imageInput" name="poster" type="file" accept="image/*" multiple class="hidden">
+
+            <button id="previewToggle" type="button" class="px-3 py-1 rounded border border-gray-100 text-sm hover:bg-gray-50">Preview</button>
+
+            <button id="clearEditor" type="button" class="px-3 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50 text-sm">Clear</button>
+          </div>
+        </div>
+
+        <!-- emoji popover -->
+        <div id="emojiPopover" class="hidden mb-3 p-2 bg-white border border-gray-100 rounded shadow-sm">
+          <div class="emoji-grid">
+            <div class="emoji-item">😄</div>
+            <div class="emoji-item">😊</div>
+            <div class="emoji-item">🔥</div>
+            <div class="emoji-item">🎉</div>
+            <div class="emoji-item">💡</div>
+            <div class="emoji-item">✨</div>
+            <div class="emoji-item">🚀</div>
+            <div class="emoji-item">👍</div>
+            <div class="emoji-item">🤝</div>
+            <div class="emoji-item">📌</div>
+            <div class="emoji-item">📝</div>
+            <div class="emoji-item">🤖</div>
+            <div class="emoji-item">😅</div>
+            <div class="emoji-item">🙌</div>
+            <div class="emoji-item">💬</div>
+            <div class="emoji-item">🔧</div>
+            <div class="emoji-item">🎯</div>
+            <div class="emoji-item">📷</div>
+            <div class="emoji-item">📎</div>
+            <div class="emoji-item">🔗</div>
+          </div>
+        </div>
+
+        <!-- editor + preview grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- editor column -->
+          <div>
+            <textarea name="text" id="editor" rows="10" placeholder="Write your post in Markdown..." class="w-full border border-gray-200 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"></textarea>
+
+            <!-- attachments -->
+            <div id="attachments" class="mt-3 grid grid-cols-3 gap-3"></div>
+
+            <!-- small file list -->
+            <div id="fileList" class="mt-3 flex flex-wrap gap-2"></div>
+          <!-- preview column -->
+           </div>
+          <div>
+            <div id="previewArea" class="w-full min-h-[220px] border border-gray-100 rounded-md p-3 bg-white text-sm overflow-auto"></div>
+            <div id="liveHint" class="text-xs text-gray-500 mt-2">Preview shows Markdown rendering plus uploaded images.</div>
+          </div>
+        </div>
+
+        <!-- footer -->
+        <div class="flex items-center justify-between mt-4">
+          <div class="text-xs text-gray-500">Markdown supported • you can attach images or files separately.</div>
+          <div class="flex items-center gap-2">
+            <button id="cancelPost" type="button" class="px-4 py-1.5 rounded border border-gray-200 hover:bg-gray-50 text-sm">Cancel</button>
+            <button type="submit" id="postBtn" class="px-4 py-1.5 rounded bg-primary text-white text-sm disabled:opacity-60" disabled>Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+      // Elements
+      const postModal = document.getElementById('postModal');
+      const openBtn = document.getElementById('openPostModal');
+      const openBtn2 = document.getElementById('openPostModal2');
+      const closeBtn = document.getElementById('closePostModal');
+      const cancelBtn = document.getElementById('cancelPost');
+      const editor = document.getElementById('editor');
+      const previewArea = document.getElementById('previewArea');
+      const previewToggle = document.getElementById('previewToggle');
+      const postBtn = document.getElementById('postBtn');
+      const clearEditor = document.getElementById('clearEditor');
+      const emojiBtn = document.getElementById('emojiBtn');
+      const emojiPopover = document.getElementById('emojiPopover');
+      const uploadTrigger = document.getElementById('uploadTrigger');
+      const imageInput = document.getElementById('imageInput');
+      const attachments = document.getElementById('attachments');
+      const fileList = document.getElementById('fileList');
+      const audienceTop = document.getElementById('audienceTop');
+
+      // State
+      const uploadedFiles = []; // { file, url, id }
+      let previewVisible = true;
+
+      // Open / close modal
+      [openBtn, openBtn2].forEach(b => b && b.addEventListener('click', openModal));
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+      function openModal() {
+        postModal.classList.add('active');
+        previewVisible = true;
+        previewArea.classList.remove('hidden');
+        previewToggle.textContent = 'Preview';
+        setTimeout(() => editor.focus(), 80);
+        renderPreview();
+      }
+      function closeModal() {
+        postModal.classList.remove('active');
+      }
+
+      // enable/disable post button
+      function updatePostButton() {
+        const hasText = editor.value.trim().length > 0;
+        const hasFiles = uploadedFiles.length > 0 || (imageInput && imageInput.files && imageInput.files.length > 0);
+        postBtn.disabled = !(hasText || hasFiles);
+      }
+      editor.addEventListener('input', () => { updatePostButton(); renderPreview(); });
+
+      // toolbar actions
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.getAttribute('data-action');
+          wrapSelection(action);
+        });
+      });
+
+      function wrapSelection(action) {
+        const textarea = editor;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.slice(start, end) || 'text';
+        let insert = '';
+        switch(action) {
+          case 'bold': insert = `**${selected}**`; break;
+          case 'italic': insert = `*${selected}*`; break;
+          case 'h1': insert = `# ${selected}`; break;
+          case 'code': insert = `\`\`\`\n${selected}\n\`\`\``; break;
+          case 'quote': insert = `> ${selected}`; break;
+          case 'ul': insert = `- ${selected}`; break;
+          case 'ol': insert = `1. ${selected}`; break;
+          case 'link':
+            const url = prompt('Enter URL (or leave empty):', 'https://');
+            if (url) insert = `[${selected || 'link text'}](${url})`;
+            else return;
+            break;
+          default: return;
+        }
+        textarea.setRangeText(insert, start, end, 'end');
+        textarea.focus();
+        updatePostButton();
+        renderPreview();
+      }
+
+      // emoji picker
+      emojiBtn.addEventListener('click', (evt) => {
+        evt.stopPropagation();
+        emojiPopover.classList.toggle('hidden');
+      });
+      document.querySelectorAll('.emoji-item').forEach(el => {
+        el.addEventListener('click', () => {
+          insertAtCursor(editor, el.textContent);
+          emojiPopover.classList.add('hidden');
+          editor.focus();
+          updatePostButton();
+          renderPreview();
+        });
+      });
+      function insertAtCursor(textarea, text) {
+        const start = textarea.selectionStart;
+        textarea.setRangeText(text, start, textarea.selectionEnd, 'end');
+        textarea.selectionStart = textarea.selectionEnd = start + text.length;
+      }
+      document.addEventListener('click', (e) => {
+        if (!emojiPopover.contains(e.target) && e.target !== emojiBtn) {
+          if (!emojiPopover.classList.contains('hidden')) emojiPopover.classList.add('hidden');
+        }
+      });
+
+      // file upload: separate from markdown (do not insert markdown)
+      uploadTrigger.addEventListener('click', () => imageInput.click());
+      imageInput.addEventListener('change', handleFiles);
+
+      function handleFiles(e) {
+        const files = Array.from(e.target.files || []);
+        files.forEach(file => {
+          const id = Math.random().toString(36).slice(2,9);
+          const url = URL.createObjectURL(file);
+          uploadedFiles.push({ file, url, id });
+          const div = document.createElement('div');
+          div.className = 'flex flex-col items-center';
+          if (file.type.startsWith('image/')) {
+            div.innerHTML = `<img src="${url}" alt="${file.name}" class="thumb"><div class="mt-2 flex gap-2"><button data-id="${id}" class="text-xs text-red-500 remove-file">Remove</button><span class="text-xs text-gray-500">${file.name}</span></div>`;
+          } else {
+            div.innerHTML = `<div class="file-chip">${file.name}</div><div class="mt-2"><button data-id="${id}" class="text-xs text-red-500 remove-file">Remove</button></div>`;
+          }
+          attachments.appendChild(div);
+
+          const chip = document.createElement('div');
+          chip.className = 'file-chip';
+          chip.innerHTML = `<span>${file.name}</span> <button data-id="${id}" class="ml-2 text-red-500 remove-file text-xs">x</button>`;
+          fileList.appendChild(chip);
+        });
+
+        // NOTE: do NOT clear imageInput.value here — keep the real input's files so the form submit includes them.
+        Array.from(document.querySelectorAll('.remove-file')).forEach(btn => {
+          btn.onclick = (ev) => {
+            const id = btn.getAttribute('data-id');
+            removeFile(id);
+          };
+        });
+
+        // imageInput.value = '';  <-- removed
+        updatePostButton();
+        renderPreview();
+      }
+
+      function removeFile(id) {
+        const idx = uploadedFiles.findIndex(f => f.id === id);
+        if (idx === -1) return;
+        URL.revokeObjectURL(uploadedFiles[idx].url);
+        uploadedFiles.splice(idx, 1);
+        attachments.innerHTML = '';
+        fileList.innerHTML = '';
+        uploadedFiles.forEach(f => {
+          const div = document.createElement('div');
+          div.className = 'flex flex-col items-center';
+          if (f.file.type.startsWith('image/')) {
+            div.innerHTML = `<img src="${f.url}" alt="${f.file.name}" class="thumb"><div class="mt-2 flex gap-2"><button data-id="${f.id}" class="text-xs text-red-500 remove-file">Remove</button><span class="text-xs text-gray-500">${f.file.name}</span></div>`;
+          } else {
+            div.innerHTML = `<div class="file-chip">${f.file.name}</div><div class="mt-2"><button data-id="${f.id}" class="text-xs text-red-500 remove-file">Remove</button></div>`;
+          }
+          attachments.appendChild(div);
+
+          const chip = document.createElement('div');
+          chip.className = 'file-chip';
+          chip.innerHTML = `<span>${f.file.name}</span> <button data-id="${f.id}" class="ml-2 text-red-500 remove-file text-xs">x</button>`;
+          fileList.appendChild(chip);
+        });
+
+        Array.from(document.querySelectorAll('.remove-file')).forEach(btn => {
+          btn.onclick = () => removeFile(btn.getAttribute('data-id'));
+        });
+
+        updatePostButton();
+        renderPreview();
+      }
+
+      // preview toggle
+      previewToggle.addEventListener('click', () => {
+        previewVisible = !previewVisible;
+        previewArea.classList.toggle('hidden', !previewVisible);
+        previewToggle.textContent = previewVisible ? 'Preview' : 'Hide';
+        if (previewVisible) renderPreview();
+      });
+
+      // render preview (markdown + images)
+      function renderPreview() {
+        const raw = editor.value || '';
+        const html = marked.parse(raw);
+        let imageHtml = '';
+        uploadedFiles.forEach(f => {
+          if (f.file.type.startsWith('image/')) {
+            imageHtml += `<div style="margin-top:10px;"><img src="${f.url}" style="max-width:100%; border-radius:8px;"/></div>`;
+          } else {
+            imageHtml += `<div style="margin-top:8px;" class="text-xs text-gray-500">Attached: ${escapeHtml(f.file.name)}</div>`;
+          }
+        });
+        previewArea.innerHTML = html + imageHtml;
+      }
+
+      function escapeHtml(s) {
+        return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+      }
+
+      // Clear editor
+      clearEditor.addEventListener('click', () => {
+        if (!confirm('Clear post?')) return;
+        editor.value = '';
+        attachments.innerHTML = '';
+        fileList.innerHTML = '';
+        uploadedFiles.forEach(f => URL.revokeObjectURL(f.url));
+        uploadedFiles.length = 0;
+        // Also clear the actual file input for a true clear:
+        if (imageInput) imageInput.value = '';
+        renderPreview();
+        updatePostButton();
+      });
+
+      // keyboard shortcuts: bold/italic
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+          if (e.key === 'b') { e.preventDefault(); wrapSelection('bold'); }
+          if (e.key === 'i') { e.preventDefault(); wrapSelection('italic'); }
+        }
+      });
+
+      // initialize
+      previewArea.classList.remove('hidden');
+      updatePostButton();
+      renderPreview();
+    </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const notifIcons = document.querySelectorAll('.fa-bell');
+      const chatIcons = document.querySelectorAll('.fa-comments');
+
+      function updateUnreadCounts() {
+        fetch("/api/unread_counts/")
+          .then(response => response.json())
+          .then(data => {
+            const notifCount = data.notifications;
+            const msgCount = data.messages;
+
+            // Handle all chat icons
+            chatIcons.forEach(icon => {
+              let msgBadge = icon.parentElement.querySelector('.msg-badge');
+              if (!msgBadge) {
+                msgBadge = document.createElement('span');
+                msgBadge.className = 'msg-badge';
+                icon.parentElement.style.position = 'relative';
+                icon.parentElement.appendChild(msgBadge);
+              }
+
+              msgBadge.className = 'notif-badge absolute sm:absolute sm:-top-1 sm:-left-1 bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full sm:inline-block hidden sm:block';
+              msgBadge.textContent = msgCount > 0 ? msgCount : '';
+              msgBadge.style.display = msgCount > 0 ? 'inline-block' : 'none';
+            });
+
+            // Handle all notification icons
+            notifIcons.forEach(icon => {
+              let notifBadge = icon.parentElement.querySelector('.notif-badge');
+              if (!notifBadge) {
+                notifBadge = document.createElement('span');
+                notifBadge.className = 'notif-badge';
+                icon.parentElement.style.position = 'relative';
+                icon.parentElement.appendChild(notifBadge);
+              }
+
+              notifBadge.className = 'notif-badge absolute sm:absolute sm:-top-1 sm:-left-1 bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full sm:inline-block hidden sm:block';
+              notifBadge.textContent = notifCount > 0 ? notifCount : '';
+              notifBadge.style.display = notifCount > 0 ? 'inline-block' : 'none';
+            });
+          })
+          .catch(err => console.error('Error fetching unread counts:', err));
+      }
+
+      // Fetch immediately, then every 20 seconds
+      updateUnreadCounts();
+      setInterval(updateUnreadCounts, 20000);
+    });
+  </script>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          document.querySelectorAll('.fa-share').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+              e.preventDefault();
+              const postElement = btn.closest('article');
+              const postId = postElement.querySelector('a[href*="/post/"]').getAttribute('href').split('/post/')[1];
+              const shareUrl = `${window.location.origin}/post/${postId}`;
+              
+              if (navigator.share) {
+                navigator.share({
+                  title: 'Check out this post on Evolv',
+                  url: shareUrl
+                }).catch(err => console.log('Share canceled', err));
+              } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                  alert('Post link copied to clipboard!');
+                });
+              }
+            });
+          });
+        });
+        </script>
+  </body>
+</html>

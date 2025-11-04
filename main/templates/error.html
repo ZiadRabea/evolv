@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Error — Evolv</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #f8f8f8, #ffffff);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col items-center justify-center text-center p-6">
+
+    <div class="max-w-md bg-white rounded-2xl shadow-lg p-8">
+      <div class="text-6xl text-primary mb-4">⚠️</div>
+      <h1 class="text-2xl font-semibold text-gray-800 mb-2">Something went wrong</h1>
+      <p class="text-gray-500 mb-6">
+        You either don’t have access to this page or an unexpected error occurred.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="/" class="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition">
+          Go to Home
+        </a>
+        <a href="/">
+          <button onclick="window.history.back()" class="px-5 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
+            Go Back
+          </button>
+        </a>
+      </div>
+    </div>
+
+    <footer class="mt-10 text-xs text-gray-400">
+      &copy; {{year|default:"2025"}} Evolv — All rights reserved.
+    </footer>
+
+  </body>
+</html>

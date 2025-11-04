@@ -1,0 +1,763 @@
+{%load static%}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Planner — Streak & Eisenhower</title>
+
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#EF7722',
+            accent: '#0BA6DF',
+            warm: '#FAA533',
+            bgsoft: '#F7F7F7',
+            neutralText: '#1E1E1E'
+          },
+          borderRadius: { 'xl2': '18px' }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --glass-bg: rgba(255,255,255,0.72);
+      --glass-border: rgba(0,0,0,0.06);
+    }
+    body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .card-shadow { box-shadow: 0 10px 30px rgba(16,24,40,0.06); }
+    .hover-card { transition: transform .18s ease, box-shadow .18s ease; }
+    .hover-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(16,24,40,0.08); }
+    .glass { background: var(--glass-bg); backdrop-filter: blur(8px); border-bottom: 1px solid var(--glass-border); }
+    .soft-btn { transition: all .16s ease; }
+    .soft-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24,40,0.05); }
+    .streak-filled { background: linear-gradient(135deg, #FAA533, #EF7722); box-shadow: inset 0 -4px 8px rgba(0,0,0,0.06); }
+    .hide-scroll-bar::-webkit-scrollbar { display: none; }
+    .hide-scroll-bar { -ms-overflow-style: none; scrollbar-width: none; }
+    .card-shadow { box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+    .hover-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.08); transition: all 0.18s ease; }
+    .glass { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.8); }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 50; align-items: center; justify-content: center; padding: 20px; }
+    .modal.active { display: flex; }
+    .hide-scroll-bar::-webkit-scrollbar { display: none; }
+    .hide-scroll-bar { -ms-overflow-style: none; scrollbar-width: none; }
+    .sidebar-icon { transition: all 0.16s ease; }
+    .sidebar-icon:hover { color: rgb(239 119 34); transform: scale(1.06); }
+    .editor-toolbar button { min-width: 36px; }
+    .emoji-grid { max-width: 360px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+    .emoji-item { cursor: pointer; font-size: 18px; padding: 6px; border-radius: 6px; text-align:center; }
+    .emoji-item:hover { background: #f3f4f6; transform: translateY(-2px); }
+    .thumb { width:84px; height:84px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb; }
+    .file-chip { font-size: 12px; padding:6px 8px; border-radius:999px; background:#fafafa; border:1px solid #eee; display:inline-flex; gap:8px; align-items:center; }
+    .modal-card { max-height: calc(100vh - 80px); overflow:auto; }
+    .toolbar-btn { background: white; border: 1px solid #eef2f7; padding:6px; border-radius:8px; }
+    .toolbar-btn:hover { background: #f9fafb; }
+  </style>
+
+</head>
+
+<body class="bg-bgsoft min-h-screen text-neutralText">
+
+  <!-- NAVBAR -->
+  <nav class="glass fixed w-full top-0 left-0 z-30 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-gradient-to-br from-primary to-warm rounded-lg flex items-center justify-center text-white font-semibold text-base">
+            E
+          </div>
+          <span class="font-semibold text-gray-800 text-lg">Evolv</span>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-8">
+            <a href="/" class="text-sm font-medium text-gray-600 hover:text-primary transition">Home</a>
+            <a href="/planner" class="text-sm font-medium text-gray-600 border-b-2 border-primary">Planner</a>
+            <a href="#" class="text-sm font-medium text-gray-600 hover:text-primary transition">Grow</a>
+            {%if user.is_authenticated%}
+              <a href="/in/{{user.profile.slug}}" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+            {%else%}
+              <a href="/accounts/login" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
+            {%endif%}
+          </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT COLUMN -->
+      <div class="lg:col-span-4 space-y-6">
+
+        <!-- STREAK CARD -->
+        <div class="bg-white rounded-xl2 p-5 card-shadow hover-card">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-lg streak-filled flex items-center justify-center text-white font-semibold text-xl shadow-sm">
+              <i class="fa-solid fa-fire"></i>
+            </div>
+            <div class="flex-1">
+              <div class="text-xl sm:text-2xl font-semibold leading-tight">Streak</div>
+              <div class="text-sm text-gray-500 mt-1">Small wins, every day</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-gray-400">Current</div>
+              <div class="text-2xl font-bold text-primary streak-count">0</div>
+            </div>
+          </div>
+
+          <div class="mt-5 flex items-center gap-3 flex-wrap streak-visual"></div>
+          <div class="mt-4 text-xs text-gray-400">Keep the momentum — small habits add up.</div>
+          <button id="openPostModal" class="mt-4 w-full py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 soft-btn">
+            <i id="openPostModal2" class="fa-solid fa-share-nodes mr-2"></i> Share Streak
+          </button>
+        </div>
+
+        <!-- HABITS -->
+        <div class="bg-white rounded-xl2 p-4 card-shadow hover-card">
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-lg font-medium">Habits</div>
+            <div class="flex items-center gap-2">
+              <button class="text-sm text-accent font-medium hover:underline add-habit-btn">+ Add</button>
+            </div>
+          </div>
+
+          <div class="mt-4 space-y-3 habits-list"></div>
+          <div class="mt-4 text-xs text-gray-400">Tip: Marking all habits updates your streak.</div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="lg:col-span-8 space-y-6">
+
+        <!-- HEADER -->
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <div class="text-2xl font-semibold leading-tight">Eisenhower Matrix</div>
+            <div class="text-sm text-gray-500">Organize tasks by Urgency & Importance</div>
+          </div>
+        </div>
+
+        <!-- MATRIX -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Quadrants -->
+          <div class="bg-white rounded-xl2 p-4 card-shadow hover-card min-h-[280px]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-primary"></div>
+                <div class="font-semibold text-sm">Urgent & Important</div>
+              </div>
+              <button data-q="q1" class="add-task-btn text-xs text-accent hover:underline">+ Add Task</button>
+            </div>
+            <div class="matrix-q1 mt-4 space-y-3"></div>
+          </div>
+
+          <div class="bg-white rounded-xl2 p-4 card-shadow hover-card min-h-[280px]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-accent"></div>
+                <div class="font-semibold text-sm">Not Urgent & Important</div>
+              </div>
+              <button data-q="q2" class="add-task-btn text-xs text-accent hover:underline">+ Add Task</button>
+            </div>
+            <div class="matrix-q2 mt-4 space-y-3"></div>
+          </div>
+
+          <div class="bg-white rounded-xl2 p-4 card-shadow hover-card min-h-[280px]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-warm"></div>
+                <div class="font-semibold text-sm">Urgent & Not Important</div>
+              </div>
+              <button data-q="q3" class="add-task-btn text-xs text-accent hover:underline">+ Add Task</button>
+            </div>
+            <div class="matrix-q3 mt-4 space-y-3"></div>
+          </div>
+
+          <div class="bg-white rounded-xl2 p-4 card-shadow hover-card min-h-[280px]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                <div class="font-semibold text-sm">Not Urgent & Not Important</div>
+              </div>
+              <button data-q="q4" class="add-task-btn text-xs text-accent hover:underline">+ Add Task</button>
+            </div>
+            <div class="matrix-q4 mt-4 space-y-3"></div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+  <form method="POST" enctype="multipart/form-data" id="postModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="createPostTitle">
+      {%csrf_token%}
+      <div class="bg-white rounded-xl2 p-4 w-full max-w-4xl mx-auto card-shadow modal-card">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            {%if user.profile.profile_pic%}
+              <img src="{{user.profile.profile_pic.url}}" class="w-11 h-11 rounded-full">
+            {%else%}
+              <img src="{%static 'imgs/profile_placeholder.png'%}" class="w-11 h-11 rounded-full">
+            {%endif%}
+            <div>
+              <div class="font-medium text-sm">{{user.first_name}}</div>
+              <div id="createPostTitle" class="text-xs text-gray-500">Share something with your network</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            👀
+            <select name="audience" id="audienceTop" class="text-sm px-3 py-1 rounded border border-gray-200">
+              <option value="public">Anyone</option>
+              <option value="connections">Connections</option>
+              <option value="onlyme">Only me</option>
+            </select>
+            <button id="closePostModal" type="button" class="text-gray-500 hover:text-gray-800 text-xl leading-none">&times;</button>
+          </div>
+        </div>
+
+        <!-- toolbar -->
+        <div class="border border-gray-100 rounded-md p-3 mb-3 flex items-start gap-3">
+          <div class="flex flex-wrap gap-2 editor-toolbar">
+            <button type="button" title="Bold (Ctrl+B)" class="toolbar-btn px-2" data-action="bold"><i class="fa-solid fa-bold"></i></button>
+            <button type="button" title="Italic (Ctrl+I)" class="toolbar-btn px-2" data-action="italic"><i class="fa-solid fa-italic"></i></button>
+            <button type="button" title="Heading" class="toolbar-btn px-2" data-action="h1"><i class="fa-solid fa-heading"></i></button>
+            <button type="button" title="Code block" class="toolbar-btn px-2" data-action="code"><i class="fa-solid fa-code"></i></button>
+            <button type="button" title="Quote" class="toolbar-btn px-2" data-action="quote"><i class="fa-solid fa-quote-left"></i></button>
+            <button type="button" title="Bulleted list" class="toolbar-btn px-2" data-action="ul"><i class="fa-solid fa-list-ul"></i></button>
+            <button type="button" title="Numbered list" class="toolbar-btn px-2" data-action="ol"><i class="fa-solid fa-list-ol"></i></button>
+            <button id="linkBtn" type="button" title="Insert link" class="toolbar-btn px-2" data-action="link"><i class="fa-solid fa-link"></i></button>
+          </div>
+
+          <div class="border-l h-6 mx-3"></div>
+
+          <div class="flex items-center gap-2">
+            <button id="emojiBtn" type="button" title="Insert emoji" class="toolbar-btn px-2"><i class="fa-regular fa-face-smile"></i></button>
+
+            <button id="uploadTrigger" type="button" title="Add files (images, pdf...)" class="toolbar-btn px-2">
+              <i class="fa-regular fa-image"></i>
+            </button>
+            <input id="imageInput" name="poster" type="file" accept="image/*" multiple class="hidden">
+
+            <button id="previewToggle" type="button" class="px-3 py-1 rounded border border-gray-100 text-sm hover:bg-gray-50">Preview</button>
+
+            <button id="clearEditor" type="button" class="px-3 py-1 rounded bg-white border border-gray-200 hover:bg-gray-50 text-sm">Clear</button>
+          </div>
+        </div>
+
+        <!-- emoji popover -->
+        <div id="emojiPopover" class="hidden mb-3 p-2 bg-white border border-gray-100 rounded shadow-sm">
+          <div class="emoji-grid">
+            <div class="emoji-item">😄</div>
+            <div class="emoji-item">😊</div>
+            <div class="emoji-item">🔥</div>
+            <div class="emoji-item">🎉</div>
+            <div class="emoji-item">💡</div>
+            <div class="emoji-item">✨</div>
+            <div class="emoji-item">🚀</div>
+            <div class="emoji-item">👍</div>
+            <div class="emoji-item">🤝</div>
+            <div class="emoji-item">📌</div>
+            <div class="emoji-item">📝</div>
+            <div class="emoji-item">🤖</div>
+            <div class="emoji-item">😅</div>
+            <div class="emoji-item">🙌</div>
+            <div class="emoji-item">💬</div>
+            <div class="emoji-item">🔧</div>
+            <div class="emoji-item">🎯</div>
+            <div class="emoji-item">📷</div>
+            <div class="emoji-item">📎</div>
+            <div class="emoji-item">🔗</div>
+          </div>
+        </div>
+
+        <!-- editor + preview grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- editor column -->
+          <div>
+            <textarea name="text" id="editor" rows="10" placeholder="Write your post in Markdown..." class="w-full border border-gray-200 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"></textarea>
+
+            <!-- attachments -->
+            <div id="attachments" class="mt-3 grid grid-cols-3 gap-3"></div>
+
+            <!-- small file list -->
+            <div id="fileList" class="mt-3 flex flex-wrap gap-2"></div>
+          <!-- preview column -->
+           </div>
+          <div>
+            <div id="previewArea" class="w-full min-h-[220px] border border-gray-100 rounded-md p-3 bg-white text-sm overflow-auto"></div>
+            <div id="liveHint" class="text-xs text-gray-500 mt-2">Preview shows Markdown rendering plus uploaded images.</div>
+          </div>
+        </div>
+
+        <!-- footer -->
+        <div class="flex items-center justify-between mt-4">
+          <div class="text-xs text-gray-500">Markdown supported • you can attach images or files separately.</div>
+          <div class="flex items-center gap-2">
+            <button id="cancelPost" type="button" class="px-4 py-1.5 rounded border border-gray-200 hover:bg-gray-50 text-sm">Cancel</button>
+            <button type="submit" id="postBtn" class="px-4 py-1.5 rounded bg-primary text-white text-sm disabled:opacity-60" disabled>Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+      // Elements
+      const postModal = document.getElementById('postModal');
+      const openBtn = document.getElementById('openPostModal');
+      const openBtn2 = document.getElementById('openPostModal2');
+      const closeBtn = document.getElementById('closePostModal');
+      const cancelBtn = document.getElementById('cancelPost');
+      const editor = document.getElementById('editor');
+      const previewArea = document.getElementById('previewArea');
+      const previewToggle = document.getElementById('previewToggle');
+      const postBtn = document.getElementById('postBtn');
+      const clearEditor = document.getElementById('clearEditor');
+      const emojiBtn = document.getElementById('emojiBtn');
+      const emojiPopover = document.getElementById('emojiPopover');
+      const uploadTrigger = document.getElementById('uploadTrigger');
+      const imageInput = document.getElementById('imageInput');
+      const attachments = document.getElementById('attachments');
+      const fileList = document.getElementById('fileList');
+      const audienceTop = document.getElementById('audienceTop');
+
+      // State
+      const uploadedFiles = []; // { file, url, id }
+      let previewVisible = true;
+
+      // Open / close modal
+      [openBtn, openBtn2].forEach(b => b && b.addEventListener('click', openModal));
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+      function openModal() {
+        postModal.classList.add('active');
+        previewVisible = true;
+        previewArea.classList.remove('hidden');
+        previewToggle.textContent = 'Preview';
+        setTimeout(() => editor.focus(), 80);
+        renderPreview();
+      }
+      function closeModal() {
+        postModal.classList.remove('active');
+      }
+
+      // enable/disable post button
+      function updatePostButton() {
+        const hasText = editor.value.trim().length > 0;
+        const hasFiles = uploadedFiles.length > 0 || (imageInput && imageInput.files && imageInput.files.length > 0);
+        postBtn.disabled = !(hasText || hasFiles);
+      }
+      editor.addEventListener('input', () => { updatePostButton(); renderPreview(); });
+
+      // toolbar actions
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.getAttribute('data-action');
+          wrapSelection(action);
+        });
+      });
+
+      function wrapSelection(action) {
+        const textarea = editor;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.slice(start, end) || 'text';
+        let insert = '';
+        switch(action) {
+          case 'bold': insert = `**${selected}**`; break;
+          case 'italic': insert = `*${selected}*`; break;
+          case 'h1': insert = `# ${selected}`; break;
+          case 'code': insert = `\`\`\`\n${selected}\n\`\`\``; break;
+          case 'quote': insert = `> ${selected}`; break;
+          case 'ul': insert = `- ${selected}`; break;
+          case 'ol': insert = `1. ${selected}`; break;
+          case 'link':
+            const url = prompt('Enter URL (or leave empty):', 'https://');
+            if (url) insert = `[${selected || 'link text'}](${url})`;
+            else return;
+            break;
+          default: return;
+        }
+        textarea.setRangeText(insert, start, end, 'end');
+        textarea.focus();
+        updatePostButton();
+        renderPreview();
+      }
+
+      // emoji picker
+      emojiBtn.addEventListener('click', (evt) => {
+        evt.stopPropagation();
+        emojiPopover.classList.toggle('hidden');
+      });
+      document.querySelectorAll('.emoji-item').forEach(el => {
+        el.addEventListener('click', () => {
+          insertAtCursor(editor, el.textContent);
+          emojiPopover.classList.add('hidden');
+          editor.focus();
+          updatePostButton();
+          renderPreview();
+        });
+      });
+      function insertAtCursor(textarea, text) {
+        const start = textarea.selectionStart;
+        textarea.setRangeText(text, start, textarea.selectionEnd, 'end');
+        textarea.selectionStart = textarea.selectionEnd = start + text.length;
+      }
+      document.addEventListener('click', (e) => {
+        if (!emojiPopover.contains(e.target) && e.target !== emojiBtn) {
+          if (!emojiPopover.classList.contains('hidden')) emojiPopover.classList.add('hidden');
+        }
+      });
+
+      // file upload: separate from markdown (do not insert markdown)
+      uploadTrigger.addEventListener('click', () => imageInput.click());
+      imageInput.addEventListener('change', handleFiles);
+
+      function handleFiles(e) {
+        const files = Array.from(e.target.files || []);
+        files.forEach(file => {
+          const id = Math.random().toString(36).slice(2,9);
+          const url = URL.createObjectURL(file);
+          uploadedFiles.push({ file, url, id });
+          const div = document.createElement('div');
+          div.className = 'flex flex-col items-center';
+          if (file.type.startsWith('image/')) {
+            div.innerHTML = `<img src="${url}" alt="${file.name}" class="thumb"><div class="mt-2 flex gap-2"><button data-id="${id}" class="text-xs text-red-500 remove-file">Remove</button><span class="text-xs text-gray-500">${file.name}</span></div>`;
+          } else {
+            div.innerHTML = `<div class="file-chip">${file.name}</div><div class="mt-2"><button data-id="${id}" class="text-xs text-red-500 remove-file">Remove</button></div>`;
+          }
+          attachments.appendChild(div);
+
+          const chip = document.createElement('div');
+          chip.className = 'file-chip';
+          chip.innerHTML = `<span>${file.name}</span> <button data-id="${id}" class="ml-2 text-red-500 remove-file text-xs">x</button>`;
+          fileList.appendChild(chip);
+        });
+
+        // NOTE: do NOT clear imageInput.value here — keep the real input's files so the form submit includes them.
+        Array.from(document.querySelectorAll('.remove-file')).forEach(btn => {
+          btn.onclick = (ev) => {
+            const id = btn.getAttribute('data-id');
+            removeFile(id);
+          };
+        });
+
+        // imageInput.value = '';  <-- removed
+        updatePostButton();
+        renderPreview();
+      }
+
+      function removeFile(id) {
+        const idx = uploadedFiles.findIndex(f => f.id === id);
+        if (idx === -1) return;
+        URL.revokeObjectURL(uploadedFiles[idx].url);
+        uploadedFiles.splice(idx, 1);
+        attachments.innerHTML = '';
+        fileList.innerHTML = '';
+        uploadedFiles.forEach(f => {
+          const div = document.createElement('div');
+          div.className = 'flex flex-col items-center';
+          if (f.file.type.startsWith('image/')) {
+            div.innerHTML = `<img src="${f.url}" alt="${f.file.name}" class="thumb"><div class="mt-2 flex gap-2"><button data-id="${f.id}" class="text-xs text-red-500 remove-file">Remove</button><span class="text-xs text-gray-500">${f.file.name}</span></div>`;
+          } else {
+            div.innerHTML = `<div class="file-chip">${f.file.name}</div><div class="mt-2"><button data-id="${f.id}" class="text-xs text-red-500 remove-file">Remove</button></div>`;
+          }
+          attachments.appendChild(div);
+
+          const chip = document.createElement('div');
+          chip.className = 'file-chip';
+          chip.innerHTML = `<span>${f.file.name}</span> <button data-id="${f.id}" class="ml-2 text-red-500 remove-file text-xs">x</button>`;
+          fileList.appendChild(chip);
+        });
+
+        Array.from(document.querySelectorAll('.remove-file')).forEach(btn => {
+          btn.onclick = () => removeFile(btn.getAttribute('data-id'));
+        });
+
+        updatePostButton();
+        renderPreview();
+      }
+
+      // preview toggle
+      previewToggle.addEventListener('click', () => {
+        previewVisible = !previewVisible;
+        previewArea.classList.toggle('hidden', !previewVisible);
+        previewToggle.textContent = previewVisible ? 'Preview' : 'Hide';
+        if (previewVisible) renderPreview();
+      });
+
+      // render preview (markdown + images)
+      function renderPreview() {
+        const raw = editor.value || '';
+        const html = marked.parse(raw);
+        let imageHtml = '';
+        uploadedFiles.forEach(f => {
+          if (f.file.type.startsWith('image/')) {
+            imageHtml += `<div style="margin-top:10px;"><img src="${f.url}" style="max-width:100%; border-radius:8px;"/></div>`;
+          } else {
+            imageHtml += `<div style="margin-top:8px;" class="text-xs text-gray-500">Attached: ${escapeHtml(f.file.name)}</div>`;
+          }
+        });
+        previewArea.innerHTML = html + imageHtml;
+      }
+
+      function escapeHtml(s) {
+        return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+      }
+
+      // Clear editor
+      clearEditor.addEventListener('click', () => {
+        if (!confirm('Clear post?')) return;
+        editor.value = '';
+        attachments.innerHTML = '';
+        fileList.innerHTML = '';
+        uploadedFiles.forEach(f => URL.revokeObjectURL(f.url));
+        uploadedFiles.length = 0;
+        // Also clear the actual file input for a true clear:
+        if (imageInput) imageInput.value = '';
+        renderPreview();
+        updatePostButton();
+      });
+
+      // keyboard shortcuts: bold/italic
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+          if (e.key === 'b') { e.preventDefault(); wrapSelection('bold'); }
+          if (e.key === 'i') { e.preventDefault(); wrapSelection('italic'); }
+        }
+      });
+
+      // initialize
+      previewArea.classList.remove('hidden');
+      updatePostButton();
+      renderPreview();
+    </script>
+  <!-- LOGIC -->
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // ===== helpers =====
+    const getData = (key, fallback) => {
+      try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+      catch { return fallback; }
+    };
+    const setData = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+
+    // ===== DOM references (create these BEFORE renders) =====
+    const habitsList = document.querySelector(".habits-list");
+    const addHabitBtn = document.querySelector(".add-habit-btn");
+    const streakCountEl = document.querySelector(".streak-count");
+    const streakVisualEl = document.querySelector(".streak-visual");
+
+    // ===== initial state =====
+    let habits = getData("habits", []);
+
+    let lastReset = getData("lastReset", null);
+    const today = new Date().toDateString();
+
+    // if new day, uncheck all habits
+    if (lastReset !== today) {
+      habits = habits.map(h => ({ ...h, done: false }));
+      setData("habits", habits);
+      setData("lastReset", today);
+    }
+
+    let streak = getData("streak", { count: 0, lastCheck: null });
+
+    const matrixData = getData("matrix", {
+      q1: [],
+      q2: [],
+      q3: [],
+      q4: []
+    });
+
+    // ===== render functions =====
+    function renderStreakVisual() {
+      if (!streakVisualEl) return;
+      streakVisualEl.innerHTML = "";
+      // show last 7 days as filled/unfilled using streak.count
+      const filled = Math.min(streak.count, 7);
+      for (let i = 0; i < 7; i++) {
+        const dot = document.createElement("div");
+        dot.className = "w-9 h-9 rounded-full border border-gray-200";
+        if (i < filled) dot.classList.add("streak-filled");
+        streakVisualEl.appendChild(dot);
+      }
+    }
+
+    function renderStreak() {
+      if (streakCountEl) streakCountEl.textContent = streak.count;
+      renderStreakVisual();
+    }
+
+    function renderHabits() {
+      if (!habitsList) return;
+      habitsList.innerHTML = "";
+      habits.forEach((h, i) => {
+        const el = document.createElement("label");
+        el.className = "flex items-center gap-3 cursor-pointer transition hover:bg-gray-50 p-2 rounded-md";
+        el.innerHTML = `
+          <input type="checkbox" class="w-5 h-5 accent-primary rounded habit-check" data-index="${i}" ${h.done ? "checked" : ""}>
+          <div>
+            <div class="text-sm font-medium">${h.name}</div>
+            <div class="text-xs text-gray-400">${h.note}</div>
+          </div>`;
+        habitsList.appendChild(el);
+      });
+    }
+
+    function renderMatrix() {
+      for (const q of ["q1", "q2", "q3", "q4"]) {
+        const box = document.querySelector(`.matrix-${q}`);
+        if (!box) continue;
+        const list = matrixData[q];
+        box.innerHTML = "";
+        if (!list.length) {
+          box.innerHTML = `<div class="text-xs text-gray-400">No tasks yet.</div>`;
+        }
+        list.forEach((t, i) => {
+          const div = document.createElement("div");
+          div.className = "border border-gray-100 rounded-lg p-3 text-sm flex items-center justify-between hover:shadow-sm transition";
+          div.innerHTML = `
+            <div>
+              <div class="font-medium">${t.title}</div>
+              <div class="text-xs text-gray-500 mt-1">${t.note}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="text-xs text-green-600 mark-done" data-q="${q}" data-i="${i}">Done</button>
+              <button class="text-xs text-red-500 hover:underline del-task" data-q="${q}" data-i="${i}">Remove</button>
+            </div>`;
+          box.appendChild(div);
+        });
+      }
+    }
+
+    // ===== behavior =====
+    addHabitBtn?.addEventListener("click", () => {
+      const name = prompt("New habit name:");
+      if (!name) return;
+      const note = prompt("Note (optional):") || "";
+      habits.push({ name, note, done: false });
+      setData("habits", habits);
+      renderHabits();
+    });
+
+    // habit checkbox change -> update habits state & maybe streak
+    document.body.addEventListener("change", e => {
+      if (e.target.classList.contains("habit-check")) {
+        const idx = Number(e.target.dataset.index);
+        habits[idx].done = e.target.checked;
+        setData("habits", habits);
+        tryUpdateStreak();
+      }
+    });
+
+    // matrix add / remove / done
+    document.querySelectorAll(".add-task-btn").forEach(btn =>
+      btn.addEventListener("click", () => {
+        const q = btn.dataset.q;
+        const title = prompt("Task title:");
+        if (!title) return;
+        const note = prompt("Note or deadline:") || "";
+        matrixData[q].push({ title, note });
+        setData("matrix", matrixData);
+        renderMatrix();
+      })
+    );
+
+    document.body.addEventListener("click", e => {
+      if (e.target.classList.contains("del-task")) {
+        const q = e.target.dataset.q;
+        const i = Number(e.target.dataset.i);
+        matrixData[q].splice(i, 1);
+        setData("matrix", matrixData);
+        renderMatrix();
+      } else if (e.target.classList.contains("mark-done")) {
+        // simple behavior: remove on done
+        const q = e.target.dataset.q;
+        const i = Number(e.target.dataset.i);
+        matrixData[q].splice(i, 1);
+        setData("matrix", matrixData);
+        renderMatrix();
+      }
+    });
+
+    // ===== streak logic =====
+    function tryUpdateStreak() {
+      const today = new Date().toDateString();
+      const allDone = habits.length > 0 && habits.every(h => h.done);
+      if (allDone && streak.lastCheck !== today) {
+        const last = streak.lastCheck ? new Date(streak.lastCheck) : null;
+        const diff = last ? Math.round((new Date(today) - last) / (1000 * 60 * 60 * 24)) : 1;
+        streak.count = (diff <= 1) ? (streak.count + 1) : 1;
+        streak.lastCheck = today;
+        setData("streak", streak);
+        renderStreak();
+      }
+    }
+
+    // ===== initial render =====
+    renderHabits();
+    renderStreak();
+    renderMatrix();
+  });
+  </script>
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const streakBtn = document.getElementById("openPostModal");
+  const editor = document.getElementById("editor");
+  const previewArea = document.getElementById("previewArea");
+  const postBtn = document.getElementById("postBtn");
+  const imageInput = document.getElementById("imageInput");
+
+  // Default image URL for shared streaks
+  const image_urls = ["https://res.cloudinary.com/de6ugcwgm/image/upload/v1761695003/streak3_fe5dz1.jpg", "https://res.cloudinary.com/de6ugcwgm/image/upload/v1761695003/streak2_cdidff.png", "https://res.cloudinary.com/de6ugcwgm/image/upload/v1761695003/streak1_aevztd.png"]
+  const randomIndex = Math.floor(Math.random() * image_urls.length);
+  const defaultImageURL = image_urls[randomIndex];
+
+  streakBtn.addEventListener("click", () => {
+    // Get streak data from localStorage (fallback: 0)
+    let streak = 0;
+    try {
+      const s = JSON.parse(localStorage.getItem("streak"));
+      streak = s?.count || 0;
+    } catch (e) {
+      streak = 0;
+    }
+
+    // Prefill the markdown content
+    const streakText = `🔥 **I'm on a ${streak}-day streak!**  
+Consistency is key — small habits build big results.  
+
+![Streak progress](${defaultImageURL})`;
+
+    editor.value = streakText;
+
+    // Trigger preview update and enable post button
+    postBtn.disabled = false;
+
+    // Render preview if available
+    if (typeof marked !== "undefined" && previewArea) {
+      previewArea.innerHTML = marked.parse(streakText);
+    }
+  });
+});
+</script>
+</body>
+</html>
