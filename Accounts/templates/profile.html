@@ -59,7 +59,7 @@
           <div class="hidden md:flex items-center space-x-8">
             <a href="/" class="text-sm font-medium text-gray-600 hover:text-primary transition">Home</a>
             <a href="/planner" class="text-sm font-medium text-gray-600 hover:text-primary transition">Planner</a>
-            <a href="#" class="text-sm font-medium text-gray-600 hover:text-primary transition">Grow</a>
+            <a href="/courses" class="text-sm font-medium text-gray-600 hover:text-primary transition">Grow</a>
             {%if user.is_authenticated%}
               {%if not user.profile == profile%}
                 <a href="/in/{{user.profile.slug}}" class="text-sm font-medium text-gray-600 hover:text-primary transition">Profile</a>
